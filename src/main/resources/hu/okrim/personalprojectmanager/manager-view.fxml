@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
+<VBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
    <children>
       <MenuBar>
         <menus>
@@ -47,15 +47,121 @@
                </children>
             </AnchorPane>
         </items>
+         <VBox.margin>
+            <Insets bottom="5.0" />
+         </VBox.margin>
       </SplitPane>
-      <TabPane prefHeight="792.0" prefWidth="900.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
+      <TabPane prefHeight="792.0" prefWidth="900.0" side="BOTTOM" style="-fx-background-color: #4bc869;" stylesheets="@styles.css" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Manage Connection">
+          <Tab closable="false" text="Manage Connection">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <GridPane alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" text="Database Type" textAlignment="CENTER" wrapText="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                                 <font>
+                                    <Font name="Unispace-Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                              <VBox alignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                                 <children>
+                                    <RadioButton fx:id="radioDerby" alignment="CENTER_LEFT" contentDisplay="CENTER" mnemonicParsing="false" selected="true" text="Derby (integrated)" wrapText="true">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="groupDatabaseType" />
+                                       </toggleGroup></RadioButton>
+                                    <RadioButton fx:id="radioSS" alignment="CENTER_LEFT" mnemonicParsing="false" text="MS SQL Server" toggleGroup="$groupDatabaseType" wrapText="true">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font></RadioButton>
+                                 </children>
+                              </VBox>
+                              <Label alignment="CENTER" text="SQL Server Login" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                 <font>
+                                    <Font name="Unispace-Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                              <GridPane alignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                <columnConstraints>
+                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" prefWidth="100.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <Button fx:id="btnLoadLoginFromFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #e8694b;" text="Load From File" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="16.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets left="10.0" right="10.0" />
+                                       </GridPane.margin>
+                                    </Button>
+                                    <Button fx:id="btnLogin" defaultButton="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #e8694b;" text="Login" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="16.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets />
+                                       </GridPane.margin>
+                                    </Button>
+                                    <Label alignment="TOP_LEFT" text="Server" wrapText="true" GridPane.halignment="RIGHT" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Username" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <Label text="Password" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="tfServer" prefHeight="26.0" prefWidth="198.0" GridPane.columnIndex="1">
+                                       <GridPane.margin>
+                                          <Insets left="10.0" right="10.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <TextField fx:id="tfUsername" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <GridPane.margin>
+                                          <Insets left="10.0" right="10.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <PasswordField fx:id="pfPassword" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                       <GridPane.margin>
+                                          <Insets left="10.0" right="10.0" />
+                                       </GridPane.margin>
+                                    </PasswordField>
+                                 </children>
+                                 <padding>
+                                    <Insets right="50.0" />
+                                 </padding>
+                              </GridPane>
+                           </children>
+                        </GridPane>
+                     </children></AnchorPane>
             </content>
           </Tab>
-          <Tab text="Manage Data">
+          <Tab closable="false" text="Manage Data">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -63,7 +169,7 @@
                      </children></AnchorPane>
             </content>
           </Tab>
-          <Tab text="Analyse Data">
+          <Tab closable="false" text="Analyse Data">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
             </content>
@@ -71,4 +177,7 @@
         </tabs>
       </TabPane>
    </children>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
 </VBox>
