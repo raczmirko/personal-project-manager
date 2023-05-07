@@ -1,0 +1,15 @@
+.tab-pane .tab {
+    -fx-font-family: "Unispace";
+    -fx-font-size: 14px;
+}
+
+.menu-bar .menu-item {
+    -fx-font-family: "Unispace";
+    -fx-font-size: 10px;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
