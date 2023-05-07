@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
+<VBox alignment="CENTER" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
    <children>
       <MenuBar>
         <menus>
@@ -63,8 +63,8 @@
                             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                           </columnConstraints>
                           <rowConstraints>
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" percentHeight="20.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" percentHeight="50.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
@@ -75,7 +75,7 @@
                               </Label>
                               <VBox alignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                                  <children>
-                                    <RadioButton fx:id="radioDerby" alignment="CENTER_LEFT" contentDisplay="CENTER" mnemonicParsing="false" selected="true" text="Derby (integrated)" wrapText="true">
+                                    <RadioButton fx:id="radioDerby" alignment="CENTER_LEFT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#saveDatabaseType" selected="true" text="Derby (integrated)" wrapText="true">
                                        <font>
                                           <Font name="Unispace-Bold" size="18.0" />
                                        </font>
@@ -103,9 +103,11 @@
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                 </rowConstraints>
                                  <children>
-                                    <Button fx:id="btnLoadLoginFromFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #e8694b;" text="Load From File" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                    <Button fx:id="btnLoadLoginFromFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #e8694b;" text="Load From File" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                        <font>
                                           <Font name="Unispace-Bold" size="16.0" />
                                        </font>
@@ -113,7 +115,7 @@
                                           <Insets left="10.0" right="10.0" />
                                        </GridPane.margin>
                                     </Button>
-                                    <Button fx:id="btnLogin" defaultButton="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #e8694b;" text="Login" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                                    <Button fx:id="btnLogin" defaultButton="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#login" style="-fx-background-color: #e8694b;" text="Login" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER">
                                        <font>
                                           <Font name="Unispace-Bold" size="16.0" />
                                        </font>
@@ -126,31 +128,54 @@
                                           <Font name="Unispace-Bold" size="18.0" />
                                        </font>
                                     </Label>
-                                    <Label text="Username" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                    <Label text="Username" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                                        <font>
                                           <Font name="Unispace-Bold" size="18.0" />
                                        </font>
                                     </Label>
-                                    <Label text="Password" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                                    <Label text="Password" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                                        <font>
                                           <Font name="Unispace-Bold" size="18.0" />
                                        </font>
                                     </Label>
-                                    <TextField fx:id="tfServer" prefHeight="26.0" prefWidth="198.0" GridPane.columnIndex="1">
+                                    <TextField fx:id="inputServer" alignment="CENTER" promptText="XYZ-PC" GridPane.columnIndex="1">
                                        <GridPane.margin>
                                           <Insets left="10.0" right="10.0" />
                                        </GridPane.margin>
                                     </TextField>
-                                    <TextField fx:id="tfUsername" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <TextField fx:id="inputUsername" alignment="CENTER" promptText="Admin" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                        <GridPane.margin>
                                           <Insets left="10.0" right="10.0" />
                                        </GridPane.margin>
                                     </TextField>
-                                    <PasswordField fx:id="pfPassword" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                    <PasswordField fx:id="inputPassword" alignment="CENTER" promptText="Trustypassword123*" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="3">
                                        <GridPane.margin>
                                           <Insets left="10.0" right="10.0" />
                                        </GridPane.margin>
                                     </PasswordField>
+                                    <Label alignment="CENTER_RIGHT" text="Database" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="inputDatabase" alignment="CENTER" promptText="ProjectsDB" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <GridPane.margin>
+                                          <Insets left="10.0" right="10.0" />
+                                       </GridPane.margin>
+                                    </TextField>
+                                    <ToggleButton fx:id="toggleSavePassword" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#toggleSavePasswordText" text="NO" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                                       <GridPane.margin>
+                                          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                       </GridPane.margin>
+                                       <font>
+                                          <Font name="Unispace-Bold" size="16.0" />
+                                       </font>
+                                    </ToggleButton>
+                                    <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" text="Save Pass" wrapText="true" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+                                       <font>
+                                          <Font name="Unispace-Bold" size="18.0" />
+                                       </font>
+                                    </Label>
                                  </children>
                                  <padding>
                                     <Insets right="50.0" />

@@ -33,8 +33,6 @@
          <content>
             <TableView fx:id="table" editable="true">
               <columns>
-                <TableColumn prefWidth="75.0" text="C1" />
-                <TableColumn prefWidth="75.0" text="C2" />
               </columns>
             </TableView>
          </content>
