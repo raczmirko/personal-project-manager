@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 public class ManagerController {
 
@@ -61,66 +62,75 @@ public class ManagerController {
         }
     }
     public void saveNewLoginInfo(String server, String db, String user, String password){
-        //At this point exceptions are already checked for
-        FileWriter writer = null;
-        try{
-            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.CSV";
-            writer = new FileWriter(filePath);
-            writer.write(server + "-" + db + "-" + user + "-" +password);
-        } catch(IOException exception){
-            showErrorDialog("ERROR: Server configuration file is not found.");
-        } finally {
-            if (writer != null){
-                try {
-                    writer.close();
-                } catch (IOException exception){
-                    showErrorDialog("ERROR: Failed to saved server configuration.");
+        //Encrypt the password
+        String encryptedPassword = "";
+        try {
+            encryptedPassword = Encryptor.encryptString(password);
+        } catch (NoSuchAlgorithmException e) {
+            showErrorDialog("ERROR: Encrypting the password has failed. :(");
+        }
+        if(!encryptedPassword.equals("")){
+            //At this point exceptions are already checked for
+            FileWriter writer = null;
+            try{
+                String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
+                writer = new FileWriter(filePath);
+                writer.write('"' + server + "-" + db + "-" + user + "-" + encryptedPassword + '"');
+            } catch(IOException exception){
+                showErrorDialog("ERROR: Server configuration file is not found. :(");
+            } finally {
+                if (writer != null){
+                    try {
+                        writer.close();
+                    } catch (IOException exception){
+                        showErrorDialog("ERROR: Failed to saved server configuration. :(");
+                    }
                 }
             }
         }
     }
-
     public void saveNewLoginInfo(String server, String db, String user){
         //At this point exceptions are already checked for
         FileWriter writer = null;
         try{
-            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.CSV";
+            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
             writer = new FileWriter(filePath);
-            writer.write(server + "-" + db + "-" + user);
+            writer.write('"' + server + "-" + db + "-" + user + '"');
         } catch(IOException exception){
-            showErrorDialog("ERROR: Server configuration file is not found.");
+            showErrorDialog("ERROR: Server configuration file is not found. :(");
         } finally {
             if (writer != null){
                 try {
                     writer.close();
                 } catch (IOException exception){
-                    showErrorDialog("ERROR: Failed to saved server configuration.");
+                    showErrorDialog("ERROR: Failed to saved server configuration. :(");
                 }
             }
         }
     }
-
     public void saveDatabaseType(){
         String serverType = radioDerby.isSelected() ? "derby" : "ss";
         FileWriter writer = null;
         try{
             String filePath = "src/main/resources/hu/okrim/personalprojectmanager/servertype" +
-                    ".CSV";
+                    ".JSON";
             writer = new FileWriter(filePath);
-            writer.write(serverType);
+            writer.write('"' + serverType + '"');
         } catch(IOException exception){
-            showErrorDialog("ERROR: Server-type configuration file is not found.");
+            showErrorDialog("ERROR: Server-type configuration file is not found. :(");
         } finally {
             if (writer != null){
                 try {
                     writer.close();
                 } catch (IOException exception){
-                    showErrorDialog("ERROR: Failed to saved server configuration.");
+                    showErrorDialog("ERROR: Failed to saved server configuration. :(");
                 }
             }
         }
     }
+    public void loadLoginInfo(){
 
+    }
     //Other functions
     public void toggleSavePasswordText(){
         if(toggleSavePassword.isSelected()){
