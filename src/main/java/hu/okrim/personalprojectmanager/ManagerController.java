@@ -12,6 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 
 public class ManagerController implements Initializable {
@@ -83,11 +85,19 @@ public class ManagerController implements Initializable {
                     saveNewLoginInfo(server, database, username);
                 }
             }
-            //Login to server
+            // Create connection URL
             String connectionURL = ConnectionController.getConnectionURLSS(server, database,
                     username, password);
-            //TODO
             System.out.println(connectionURL);
+            // Establish connection
+            try (Connection connection = ConnectionController.establishConnection(connectionURL)){
+                showHelpDialog("Connection Successful!", "You have successfully connected to the " +
+                        "database!");
+            } catch (SQLException ex){
+                showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
+                        " all the credentials correctly!");
+                System.out.println(ex.getMessage());
+            }
         }
     }
     // Background login when not logging in directly on the GUI
@@ -117,7 +127,7 @@ public class ManagerController implements Initializable {
         try{
             String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
             writer = new FileWriter(filePath);
-            writer.write('"' + server + "-" + db + "-" + user + "-" + password + '"');
+            writer.write('"' + server + ";" + db + ";" + user + ";" + password + '"');
         } catch(IOException exception){
             showErrorDialog("ERROR: Server configuration file is not found. :(");
         } finally {
@@ -136,7 +146,7 @@ public class ManagerController implements Initializable {
         try{
             String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
             writer = new FileWriter(filePath);
-            writer.write('"' + server + "-" + db + "-" + user + '"');
+            writer.write('"' + server + ";" + db + ";" + user + '"');
         } catch(IOException exception){
             showErrorDialog("ERROR: Server configuration file is not found. :(");
         } finally {
@@ -183,7 +193,7 @@ public class ManagerController implements Initializable {
                 //(char) 34 = '"'
                 line = line.replaceAll(Character.toString((char) 34), "");
                 //Then I split the line at each separator (I'm using dashes)
-                String[] words = line.split("-");
+                String[] words = line.split(";");
                 //Load the words into the return Stack
                 loginInfo.addAll(Arrays.asList(words));
             }
@@ -213,11 +223,10 @@ public class ManagerController implements Initializable {
         inputServer.setText(loginInfo.get(0));
         inputDatabase.setText(loginInfo.get(1));
         inputUsername.setText(loginInfo.get(2));
-        if(loginInfo.get(3) != null){
+        if(loginInfo.size() == 4){
             inputPassword.setText(loginInfo.get(3));
         }
     }
-
 
     // OTHER functions
     public void toggleSavePasswordText(){
