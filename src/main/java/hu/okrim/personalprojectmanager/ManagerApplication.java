@@ -15,9 +15,11 @@ public class ManagerApplication extends Application {
         stage.setTitle("Personal Project Manager");
         stage.setScene(scene);
         stage.show();
+
     }
 
     public static void main(String[] args) {
         launch();
+
     }
 }

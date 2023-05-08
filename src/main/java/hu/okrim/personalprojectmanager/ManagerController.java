@@ -1,6 +1,7 @@
 package hu.okrim.personalprojectmanager;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
@@ -10,12 +11,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
-public class ManagerController {
+public class ManagerController implements Initializable {
     //-----------------------------------VARIABLES-------------------------------------
     private final String DEFAULTCONFIGPATH =  "src/main/resources/hu/okrim/personalprojectmanager" +
             "/server.JSON";
+    private final String SERVERTYPEPATH = "src/main/resources/hu/okrim/personalprojectmanager" +
+            "/servertype.JSON";
     private String customConfigPath;
     // Input Fields
     @FXML
@@ -214,6 +218,7 @@ public class ManagerController {
         }
     }
 
+
     // OTHER functions
     public void toggleSavePasswordText(){
         if(toggleSavePassword.isSelected()){
@@ -246,5 +251,37 @@ public class ManagerController {
                 
                 """;
         showHelpDialog("What happens with you password?", message);
+    }
+    public void loadServerTypeRadioButtonState(){
+        Scanner scanner;
+        try{
+            scanner = new Scanner(new File(SERVERTYPEPATH));
+            // Read the content of the file line by line
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                //Since I save the JSON files with quotation marks I need to cut them off
+                //Since the replaceAll function only takes Strings I generate a String
+                //From the ASCII code of a quotation mark
+                //(char) 34 = '"'
+                line = line.replaceAll(Character.toString((char) 34), "");
+                if(line.equals("derby")){
+                    radioDerby.setSelected(true);
+                }
+                else{
+                    radioSS.setSelected(true);
+                }
+            }
+            // Close the Scanner
+            scanner.close();
+        } catch(FileNotFoundException FNFE){
+            showErrorDialog("ERROR: Servertype config files not found! :(");
+        }
+    }
+
+    // Startup functions
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        loadServerTypeRadioButtonState();
+        loginAuto();
     }
 }
