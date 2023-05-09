@@ -6,7 +6,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -19,9 +25,13 @@ import java.sql.*;
 import java.util.*;
 
 public class ManagerController implements Initializable {
+    @FXML
     public ToggleGroup groupDatabaseType;
+    @FXML
     public Button btnLogin;
+    @FXML
     public Button btnLoadLoginFromFile;
+    @FXML
     private String currentDatabase;
     // Input Fields
     @FXML
@@ -314,25 +324,97 @@ public class ManagerController implements Initializable {
         System.out.println("\nSQL: " + sqlString);
         try{
             Statement statement = connection.createStatement();
-            //Execute the CREATE TABLE statement
+            // Execute the CREATE TABLE statement
             ResultSet resultSet = statement.executeQuery(sqlString);
             List<String> tableNames = new ArrayList<>();
+            // Getting the name of each table in the database
             while (resultSet.next()){
                 // Adding each result from the result set to the list on second tab
                 String tableName = resultSet.getString("table_name");
                 tableNames.add(tableName);
-                // Create an ObservableList from the table names
-                ObservableList<String> items = FXCollections.observableArrayList(tableNames);
-                // Set the items in the ListView
-                listViewTables.setItems(items);
             }
+            // Create an ObservableList from the table names
+            ObservableList<String> items = FXCollections.observableArrayList(tableNames);
+
+            // Set the cell factory for the ListView to produce fun colourful cells
+            setCellFactory(listViewTables);
+            // Set the items in the ListView
+            listViewTables.setItems(items);
+
         } catch (SQLTimeoutException SQLTOE){
             showErrorDialog("ERROR: You request to load the database tables has timed out.");
         } catch(SQLException SQLE){
             showErrorDialog("ERROR: Loading the database tables was unsuccessful. :(");
         }
-
     }
+    public void setCellFactory(ListView<String> listView) {
+        listView.setCellFactory(param -> new ListCell<>() {
+            private boolean isInitialized = false;
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setBackground(null);
+                } else {
+                    setText(item);
+                    setFont(Font.font("Unispace", FontWeight.BOLD, 16));
+
+                    // Set the background color only if the cell has not been initialized
+                    if (!isInitialized) {
+                        BackgroundFill backgroundFill = new BackgroundFill(pickRandomColor(), null, null);
+                        setBackground(new Background(backgroundFill));
+                        isInitialized = true;
+                    }
+                }
+            }
+        });
+    }
+
+    private Paint pickRandomColor() {
+        Paint[] colors = {
+                Color.rgb(63, 81, 181),   // Indigo
+                Color.rgb(255, 255, 50),  // Purple
+                Color.rgb(33, 150, 243),  // Blue
+                Color.rgb(76, 175, 80),   // Green
+                Color.rgb(255, 152, 0),   // Orange
+                Color.rgb(255, 87, 34),   // Deep Orange
+                Color.rgb(0, 204, 0),  // Deep Purple
+                Color.rgb(0, 188, 212)    // Cyan
+        };
+
+        // Returning a random colour from the list
+        // Between index 0 and length of the list
+        return colors[(int)(Math.random()*colors.length)];
+    }
+
+    //    public void showTablesInListBU(Connection connection){
+//        String sqlString =  "SELECT TABLE_NAME\n" +
+//                "FROM INFORMATION_SCHEMA.TABLES\n" +
+//                "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
+//                "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
+//        System.out.println("\nSQL: " + sqlString);
+//        try{
+//            Statement statement = connection.createStatement();
+//            //Execute the CREATE TABLE statement
+//            ResultSet resultSet = statement.executeQuery(sqlString);
+//            List<String> tableNames = new ArrayList<>();
+//            while (resultSet.next()){
+//                // Adding each result from the result set to the list on second tab
+//                String tableName = resultSet.getString("table_name");
+//                tableNames.add(tableName);
+//                // Create an ObservableList from the table names
+//                ObservableList<String> items = FXCollections.observableArrayList(tableNames);
+//                // Set the items in the ListView
+//                listViewTables.setItems(items);
+//            }
+//        } catch (SQLTimeoutException SQLTOE){
+//            showErrorDialog("ERROR: You request to load the database tables has timed out.");
+//        } catch(SQLException SQLE){
+//            showErrorDialog("ERROR: Loading the database tables was unsuccessful. :(");
+//        }
+//
+//    }
     public void createListViewListeners(ListView<String> listView){
         // Adding a click listener for double clicks
         listView.setOnMouseClicked(event -> {
