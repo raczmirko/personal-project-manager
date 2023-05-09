@@ -3,12 +3,13 @@ package hu.okrim.personalprojectmanager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
@@ -26,6 +27,8 @@ import java.util.*;
 
 public class ManagerController implements Initializable {
     private Paint lastColour = null;
+    public static String selectedTable = null;
+    String currentConnectionURL = null;
     @FXML
     public ToggleGroup groupDatabaseType;
     @FXML
@@ -131,26 +134,18 @@ public class ManagerController implements Initializable {
                 "/server.JSON";
         ArrayList<String> loginInfo = loadLoginInfo(defaultConfigPath);
         String connectionURL;
-        if(loginInfo.size() == 3){
-            connectionURL = ConnectionController.getConnectionURLSS(
-                    loginInfo.get(0),
-                    loginInfo.get(1),
-                    loginInfo.get(2),
-                    inputPassword.getText()
-            );
-        }
-        else{
+        if(loginInfo.size() == 4){
             connectionURL = ConnectionController.getConnectionURLSS(
                     loginInfo.get(0),
                     loginInfo.get(1),
                     loginInfo.get(2),
                     loginInfo.get(3)
             );
+            // Index 1 is the database since saving follows the following pattern:
+            // server;database;user;password
+            String database = loginInfo.get(1);
+            finalizeConnection(database, connectionURL, true);
         }
-        // Index 1 is the database since saving follows the following pattern:
-        // server;database;user;password
-        String database = loginInfo.get(1);
-        finalizeConnection(database, connectionURL, true);
     }
     public void saveNewLoginInfo(String server, String db, String user, String password){
         //At this point exceptions are already checked for
@@ -343,7 +338,6 @@ public class ManagerController implements Initializable {
             setCellFactory(listViewTables);
             // Set the items in the ListView
             listViewTables.setItems(items);
-
         } catch (SQLTimeoutException SQLTOE){
             showErrorDialog("ERROR: You request to load the database tables has timed out.");
         } catch(SQLException SQLE){
@@ -361,8 +355,9 @@ public class ManagerController implements Initializable {
                     setBackground(null);
                 } else {
                     setText(item);
-                    setFont(Font.font("Unispace", FontWeight.BOLD, 16));
-
+                    setFont(Font.font("Unispace", FontWeight.BOLD, 18));
+                    setAlignment(Pos.CENTER);
+                    setBorder(new Border(new BorderStroke(null, BorderStrokeStyle.SOLID, null, null)));
                     // Set the background color only if the cell has not been initialized
                     if (!isInitialized) {
                         BackgroundFill backgroundFill = new BackgroundFill(pickRandomColor(), null, null);
@@ -373,7 +368,19 @@ public class ManagerController implements Initializable {
             }
         });
     }
-
+    public void showTablePopup(){
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(ManagerApplication.class.getResource("table" +
+                    "-view.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            Stage tableStage = new Stage();
+            tableStage.setTitle("Personal Project Manager - Editor");
+            tableStage.setScene(scene);
+            tableStage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private Paint pickRandomColor() {
         Paint[] colors = {
                 Color.rgb(129, 190, 131),   // Payton
@@ -395,34 +402,6 @@ public class ManagerController implements Initializable {
         // Between index 0 and length of the list
         return currentColor;
     }
-
-    //    public void showTablesInListBU(Connection connection){
-//        String sqlString =  "SELECT TABLE_NAME\n" +
-//                "FROM INFORMATION_SCHEMA.TABLES\n" +
-//                "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
-//                "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
-//        System.out.println("\nSQL: " + sqlString);
-//        try{
-//            Statement statement = connection.createStatement();
-//            //Execute the CREATE TABLE statement
-//            ResultSet resultSet = statement.executeQuery(sqlString);
-//            List<String> tableNames = new ArrayList<>();
-//            while (resultSet.next()){
-//                // Adding each result from the result set to the list on second tab
-//                String tableName = resultSet.getString("table_name");
-//                tableNames.add(tableName);
-//                // Create an ObservableList from the table names
-//                ObservableList<String> items = FXCollections.observableArrayList(tableNames);
-//                // Set the items in the ListView
-//                listViewTables.setItems(items);
-//            }
-//        } catch (SQLTimeoutException SQLTOE){
-//            showErrorDialog("ERROR: You request to load the database tables has timed out.");
-//        } catch(SQLException SQLE){
-//            showErrorDialog("ERROR: Loading the database tables was unsuccessful. :(");
-//        }
-//
-//    }
     public void createListViewListeners(ListView<String> listView){
         // Adding a click listener for double clicks
         listView.setOnMouseClicked(event -> {
@@ -430,6 +409,8 @@ public class ManagerController implements Initializable {
             if (selectedTableName != null) {
                 if (event.getClickCount() > 1) {
                     System.out.println("Selected table: " + selectedTableName);
+                    selectedTable = selectedTableName;
+                    showTablePopup();
                 }
             }
         });
@@ -439,6 +420,8 @@ public class ManagerController implements Initializable {
             if (selectedTableName != null) {
                 if (event.getCode() == KeyCode.ENTER) {
                     System.out.println("Selected table: " + selectedTableName);
+                    selectedTable = selectedTableName;
+                    showTablePopup();
                 }
             }
         });
@@ -448,5 +431,6 @@ public class ManagerController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         loadServerTypeRadioButtonState();
         loginAuto();
+        listViewTables.setPlaceholder(new Label("Couldn't connect to database, please fill in the login information!"));
     }
 }
