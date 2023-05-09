@@ -25,6 +25,7 @@ import java.sql.*;
 import java.util.*;
 
 public class ManagerController implements Initializable {
+    private Paint lastColour = null;
     @FXML
     public ToggleGroup groupDatabaseType;
     @FXML
@@ -375,19 +376,24 @@ public class ManagerController implements Initializable {
 
     private Paint pickRandomColor() {
         Paint[] colors = {
-                Color.rgb(63, 81, 181),   // Indigo
-                Color.rgb(255, 255, 50),  // Purple
-                Color.rgb(33, 150, 243),  // Blue
-                Color.rgb(76, 175, 80),   // Green
-                Color.rgb(255, 152, 0),   // Orange
-                Color.rgb(255, 87, 34),   // Deep Orange
-                Color.rgb(0, 204, 0),  // Deep Purple
-                Color.rgb(0, 188, 212)    // Cyan
+                Color.rgb(129, 190, 131),   // Payton
+                Color.rgb(234, 135, 30),  // Supreme Orange
+                Color.rgb(24, 102, 225),  // Royal Azure
+                Color.rgb(255, 204, 51),   // Sunglow
+                Color.rgb(99, 183, 183),   // Pastel Teal
+                Color.rgb(200, 77, 142),   // Royal Lilac
+                Color.rgb(133, 113, 83),  // Dark Khaki
+                Color.rgb(245, 189, 2)    // Royal Gold
         };
-
+        Paint currentColor;
+        // If the randomly chose colour is the same as the previous one, re-pick
+        do {
+            currentColor = colors[(int)(Math.random()*colors.length)];
+        } while(currentColor.equals(lastColour));
+        lastColour = currentColor;
         // Returning a random colour from the list
         // Between index 0 and length of the list
-        return colors[(int)(Math.random()*colors.length)];
+        return currentColor;
     }
 
     //    public void showTablesInListBU(Connection connection){
