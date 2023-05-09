@@ -1,8 +1,11 @@
 package hu.okrim.personalprojectmanager;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -12,17 +15,14 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class ManagerController implements Initializable {
-    //-----------------------------------VARIABLES-------------------------------------
-    private final String DEFAULTCONFIGPATH =  "src/main/resources/hu/okrim/personalprojectmanager" +
-            "/server.JSON";
-    private final String SERVERTYPEPATH = "src/main/resources/hu/okrim/personalprojectmanager" +
-            "/servertype.JSON";
-    private String customConfigPath;
+    public ToggleGroup groupDatabaseType;
+    public Button btnLogin;
+    public Button btnLoadLoginFromFile;
+    private String currentDatabase;
     // Input Fields
     @FXML
     private TextField inputServer;
@@ -37,8 +37,9 @@ public class ManagerController implements Initializable {
     @FXML
     private ToggleButton toggleTemporaryLogin;
 
-    // Buttons
-
+    // Other components
+    @FXML
+    private ListView<String> listViewTables;
     // RadioButtons
     @FXML
     private RadioButton radioDerby;
@@ -88,21 +89,34 @@ public class ManagerController implements Initializable {
             // Create connection URL
             String connectionURL = ConnectionController.getConnectionURLSS(server, database,
                     username, password);
-            System.out.println(connectionURL);
-            // Establish connection
-            try (Connection connection = ConnectionController.establishConnection(connectionURL)){
-                showHelpDialog("Connection Successful!", "You have successfully connected to the " +
-                        "database!");
-            } catch (SQLException ex){
-                showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
-                        " all the credentials correctly!");
-                System.out.println(ex.getMessage());
-            }
+            finalizeConnection(database, connectionURL);
         }
     }
+
+    private void finalizeConnection(String database, String connectionURL) {
+        // Establish connection
+        try (Connection connection = ConnectionController.establishConnection(connectionURL)){
+            showHelpDialog("Connection Successful!", "You have successfully connected to the " +
+                    "database!");
+            // Saving the current connected DB into a variable for easy access
+            currentDatabase = database;
+            // Loading the results into the listView on the Manage Data tab
+            showTablesInList(connection);
+            // Adding eventListener to the ListView
+            createListViewListeners(listViewTables);
+        } catch (SQLException ex){
+            showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
+                    " all the credentials correctly!");
+            System.out.println(ex.getMessage());
+        }
+    }
+
     // Background login when not logging in directly on the GUI
     public void loginAuto(){
-        ArrayList<String> loginInfo = loadLoginInfo(DEFAULTCONFIGPATH);
+        //-----------------------------------VARIABLES-------------------------------------
+        String defaultConfigPath = "src/main/resources/hu/okrim/personalprojectmanager" +
+                "/server.JSON";
+        ArrayList<String> loginInfo = loadLoginInfo(defaultConfigPath);
         String connectionURL;
         if(loginInfo.size() == 3){
             connectionURL = ConnectionController.getConnectionURLSS(
@@ -120,6 +134,10 @@ public class ManagerController implements Initializable {
                     loginInfo.get(3)
             );
         }
+        // Index 1 is the database since saving follows the following pattern:
+        // server;database;user;password
+        String database = loginInfo.get(1);
+        finalizeConnection(database, connectionURL);
     }
     public void saveNewLoginInfo(String server, String db, String user, String password){
         //At this point exceptions are already checked for
@@ -264,7 +282,9 @@ public class ManagerController implements Initializable {
     public void loadServerTypeRadioButtonState(){
         Scanner scanner;
         try{
-            scanner = new Scanner(new File(SERVERTYPEPATH));
+            String serverPath = "src/main/resources/hu/okrim/personalprojectmanager" +
+                    "/servertype.JSON";
+            scanner = new Scanner(new File(serverPath));
             // Read the content of the file line by line
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -286,7 +306,53 @@ public class ManagerController implements Initializable {
             showErrorDialog("ERROR: Servertype config files not found! :(");
         }
     }
+    public void showTablesInList(Connection connection){
+        String sqlString =  "SELECT TABLE_NAME\n" +
+                            "FROM INFORMATION_SCHEMA.TABLES\n" +
+                            "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
+                            "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
+        System.out.println("\nSQL: " + sqlString);
+        try{
+            Statement statement = connection.createStatement();
+            //Execute the CREATE TABLE statement
+            ResultSet resultSet = statement.executeQuery(sqlString);
+            List<String> tableNames = new ArrayList<>();
+            while (resultSet.next()){
+                // Adding each result from the result set to the list on second tab
+                String tableName = resultSet.getString("table_name");
+                tableNames.add(tableName);
+                // Create an ObservableList from the table names
+                ObservableList<String> items = FXCollections.observableArrayList(tableNames);
+                // Set the items in the ListView
+                listViewTables.setItems(items);
+            }
+        } catch (SQLTimeoutException SQLTOE){
+            showErrorDialog("ERROR: You request to load the database tables has timed out.");
+        } catch(SQLException SQLE){
+            showErrorDialog("ERROR: Loading the database tables was unsuccessful. :(");
+        }
 
+    }
+    public void createListViewListeners(ListView<String> listView){
+        // Adding a click listener for double clicks
+        listView.setOnMouseClicked(event -> {
+            String selectedTableName = listView.getSelectionModel().getSelectedItem();
+            if (selectedTableName != null) {
+                if (event.getClickCount() > 1) {
+                    System.out.println("Selected table: " + selectedTableName);
+                }
+            }
+        });
+        // Adding a keyboard listener for enter
+        listView.setOnKeyPressed(event -> {
+            String selectedTableName = listView.getSelectionModel().getSelectedItem();
+            if (selectedTableName != null) {
+                if (event.getCode() == KeyCode.ENTER) {
+                    System.out.println("Selected table: " + selectedTableName);
+                }
+            }
+        });
+    }
     // Startup functions
     @Override
     public void initialize(URL location, ResourceBundle resources) {
