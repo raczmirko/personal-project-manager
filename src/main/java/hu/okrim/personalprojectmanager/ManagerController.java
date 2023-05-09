@@ -99,15 +99,17 @@ public class ManagerController implements Initializable {
             // Create connection URL
             String connectionURL = ConnectionController.getConnectionURLSS(server, database,
                     username, password);
-            finalizeConnection(database, connectionURL);
+            finalizeConnection(database, connectionURL, false);
         }
     }
-
-    private void finalizeConnection(String database, String connectionURL) {
+    private void finalizeConnection(String database, String connectionURL, boolean autoLogin) {
         // Establish connection
         try (Connection connection = ConnectionController.establishConnection(connectionURL)){
-            showHelpDialog("Connection Successful!", "You have successfully connected to the " +
-                    "database!");
+            // Only show the connection popup if connecting manually
+            if(!autoLogin){
+                showHelpDialog("Connection Successful!", "You have successfully connected to the " +
+                        "database!");
+            }
             // Saving the current connected DB into a variable for easy access
             currentDatabase = database;
             // Loading the results into the listView on the Manage Data tab
@@ -147,7 +149,7 @@ public class ManagerController implements Initializable {
         // Index 1 is the database since saving follows the following pattern:
         // server;database;user;password
         String database = loginInfo.get(1);
-        finalizeConnection(database, connectionURL);
+        finalizeConnection(database, connectionURL, true);
     }
     public void saveNewLoginInfo(String server, String db, String user, String password){
         //At this point exceptions are already checked for
