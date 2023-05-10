@@ -26,14 +26,10 @@ public class TableController implements Initializable {
 
     private final ArrayList<String> COLUMNNAMES = new ArrayList<>();
     private final ArrayList<String> KEYS = new ArrayList<>();
-
+    private final ArrayList<Integer> KEYINDEXES = new ArrayList<>();
     private String selectedTable;
-
+    List<String> columnOrder;
     public void initTable() {
-        // Getting the name of the columns in the current table
-        String sqlString = "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH\n" +
-                "FROM INFORMATION_SCHEMA.COLUMNS\n" +
-                "WHERE TABLE_NAME = '" + selectedTable + "'";
         // Getting everything from the currently selected table
         String sqlSelect = "SELECT * FROM " + selectedTable;
         try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
@@ -113,9 +109,7 @@ public class TableController implements Initializable {
             ManagerController.showErrorDialog(e.getMessage());
         }
     }
-
     public void insertRow() {
-        System.out.printf("Trying to insert into %s", table.toString());
         ArrayList<String> dataToInsert = new ArrayList<>();
         // Only let us insert if the table is not re-ordered
         if (table.getSortOrder().isEmpty()) {
@@ -207,22 +201,57 @@ public class TableController implements Initializable {
                     KEYS.add(resultSetKeys.getString(columnIndex));
                 }
             }
-
-            System.out.println(COLUMNNAMES);
-            System.out.println(KEYS);
-
         } catch (Exception e) {
             ManagerController.showErrorDialog("ERROR: Unknown error occurred. :(");
         }
     }
-
+    private void getIndexColumnIndex(ArrayList<String> columnNames) {
+        ObservableList<TableColumn<TableRowData, ?>> columns = table.getColumns();
+        for (int i = 0; i < columns.size(); i++) {
+            TableColumn<?, ?> column = columns.get(i);
+            if (columnNames.contains(column.getText())) {
+                KEYINDEXES.add(i);
+            }
+        }
+        System.out.println("KEYS:" + KEYINDEXES);
+    }
+    private List<String> getTableColumnOrder(){
+        ObservableList<TableColumn<TableRowData, ?>> columns = table.getColumns();
+        List<String> columnOrder = new ArrayList<>();
+        for (TableColumn<TableRowData, ?> column : columns) {
+            String columnName = column.getText();
+            columnOrder.add(columnName);
+        }
+        return columnOrder;
+    }
+    private boolean checkColumnOrderMatch(){
+        boolean columnsMatch = true;
+        List<String> initialColumns = columnOrder;
+        List<String> currentColumns = getTableColumnOrder();
+        for(int i = 0; i < initialColumns.size(); i++){
+            if(!initialColumns.get(i).equals(currentColumns.get(i))){
+                columnsMatch = false;
+                break;
+            }
+        }
+        return columnsMatch;
+    }
+    public void deleteRow(){
+        if(!checkColumnOrderMatch()){
+            ManagerController.showErrorDialog("Cannot delete if the columns of the table have " +
+                    "been rearranged!");
+        }else{
+            //DELETE FUNCTIONALITY
+        }
+    }
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Setting the table in case multiple instances of the editor will be opened
         // So that each instance knows what table it is editing
         selectedTable = ManagerController.selectedTable;
-        System.out.println("Table: " + selectedTable);
         // Initialize table
         initTable();
+        // Saving the order of columns
+        columnOrder = getTableColumnOrder();
     }
 }
