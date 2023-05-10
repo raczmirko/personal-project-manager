@@ -27,13 +27,15 @@ public class TableController implements Initializable {
     private final ArrayList<String> COLUMNNAMES = new ArrayList<>();
     private final ArrayList<String> KEYS = new ArrayList<>();
 
+    private String selectedTable;
+
     public void initTable() {
         // Getting the name of the columns in the current table
         String sqlString = "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH\n" +
                 "FROM INFORMATION_SCHEMA.COLUMNS\n" +
-                "WHERE TABLE_NAME = '" + ManagerController.selectedTable + "'";
+                "WHERE TABLE_NAME = '" + selectedTable + "'";
         // Getting everything from the currently selected table
-        String sqlSelect = "SELECT * FROM " + ManagerController.selectedTable;
+        String sqlSelect = "SELECT * FROM " + selectedTable;
         try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
             try {
                 // Running query to get the column information from INFORMATION_SCHEMA
@@ -105,14 +107,16 @@ public class TableController implements Initializable {
             } catch (SQLTimeoutException SQLTOE) {
                 ManagerController.showErrorDialog("ERROR: Your request to load the database tables has timed out.");
             } catch (SQLException SQLE) {
-                ManagerController.showErrorDialog("ERROR: Loading the database tables was unsuccessful. :(");
+                ManagerController.showErrorDialog(SQLE.getMessage());
             }
         } catch (Exception e) {
-            ManagerController.showErrorDialog("ERROR: Unknown error occurred. :(");
+            ManagerController.showErrorDialog(e.getMessage());
         }
     }
 
-    public void insertRow(){
+    public void insertRow() {
+        System.out.printf("Trying to insert into %s", table.toString());
+        ArrayList<String> dataToInsert = new ArrayList<>();
         // Only let us insert if the table is not re-ordered
         if (table.getSortOrder().isEmpty()) {
             // We know that if the table is unsorted, then the last row is the row of input
@@ -120,7 +124,41 @@ public class TableController implements Initializable {
             int lastIndex = table.getItems().size() - 1;
             TableRowData data = table.getItems().get(lastIndex);
             for(int i = 0; i < table.getColumns().size(); i++){
-                System.out.println(data.getColumnData(i).toString());
+                dataToInsert.add(data.getColumnData(i).get());
+            }
+            try (Connection connection =
+                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)){
+                // Building dynamic-SQL query for the INSERT statement
+                StringBuilder insertSQL =
+                        new StringBuilder("INSERT INTO " + selectedTable + " (");
+                for(String s : COLUMNNAMES){
+                    insertSQL.append("[");
+                    insertSQL.append(s);
+                    insertSQL.append("],");
+                }
+                // Remove the last colon
+                insertSQL.deleteCharAt(insertSQL.length() - 1);
+                // Add closing bracket
+                insertSQL.append(") VALUES (");
+                for(String s : dataToInsert){
+                    insertSQL.append("'");
+                    insertSQL.append(s);
+                    insertSQL.append("',");
+                }
+                // Remove the last colon
+                insertSQL.deleteCharAt(insertSQL.length() - 1);
+                // Add closing bracket
+                insertSQL.append(")");
+                // Executing SQL INSERT statement
+                Statement statement = connection.createStatement();
+                statement.execute(insertSQL.toString());
+                // Show a success message dialog upon successfull insertion
+                ManagerController.showHelpDialog("INSERT successful", "You have successfully " +
+                            "inserted into the " + selectedTable + " table.");
+                // Re-initializate the table to add another input field, etc.
+                initTable();
+            }catch (Exception ex){
+                ManagerController.showErrorDialog(ex.getMessage());
             }
         } else {
             ManagerController.showErrorDialog("You cannot insert until the table is custom " +
@@ -129,12 +167,12 @@ public class TableController implements Initializable {
     }
     public void saveTableInfo() throws SQLException {
         String sqlColumns = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS\n" +
-                "WHERE TABLE_NAME = '" + ManagerController.selectedTable + "'";
+                "WHERE TABLE_NAME = '" + selectedTable + "'";
         String sqlKeys =    "SELECT COLUMN_NAME\n" +
                             "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE\n" +
-                            "WHERE TABLE_NAME = '" + ManagerController.selectedTable +"'\n" +
+                            "WHERE TABLE_NAME = '" + selectedTable +"'\n" +
                             "AND CONSTRAINT_NAME LIKE '%PK%' \n" +
-                            "OR TABLE_NAME = '" + ManagerController.selectedTable + "' AND \n" +
+                            "OR TABLE_NAME = '" + selectedTable + "' AND \n" +
                             "CONSTRAINT_NAME LIKE '%PRIMARY%'";
         try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
 
@@ -180,6 +218,11 @@ public class TableController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Setting the table in case multiple instances of the editor will be opened
+        // So that each instance knows what table it is editing
+        selectedTable = ManagerController.selectedTable;
+        System.out.println("Table: " + selectedTable);
+        // Initialize table
         initTable();
     }
 }
