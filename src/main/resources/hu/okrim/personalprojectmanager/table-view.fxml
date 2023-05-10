@@ -43,7 +43,7 @@
       <rowConstraints>
          <RowConstraints valignment="CENTER" vgrow="ALWAYS" />
       </rowConstraints>
-      <Button fx:id="btnDelete" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #ff4d4d;" text="Delete" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
+      <Button fx:id="btnDelete" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#deleteRow" style="-fx-background-color: #ff4d4d;" text="Delete" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
          <font>
             <Font name="Unispace-Bold" size="14.0" />
          </font>
