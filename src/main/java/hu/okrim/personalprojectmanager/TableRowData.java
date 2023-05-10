@@ -17,6 +17,14 @@ public class TableRowData {
         return rowData.get(columnIndex);
     }
 
+    public List<String> getAllDataFromRow(){
+        List<String> rowData = new ArrayList<>();
+        for(StringProperty str : this.rowData){
+            rowData.add(str.get());
+        }
+        return rowData;
+    }
+
     public void setColumnData(int columnIndex, String newValue) {
         getColumnData(columnIndex).set(newValue);
     }
