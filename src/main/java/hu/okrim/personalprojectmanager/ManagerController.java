@@ -322,7 +322,6 @@ public class ManagerController implements Initializable {
                             "FROM INFORMATION_SCHEMA.TABLES\n" +
                             "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
                             "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
-        System.out.println("\nSQL: " + sqlString);
         try{
             Statement statement = connection.createStatement();
             // Execute the CREATE TABLE statement
