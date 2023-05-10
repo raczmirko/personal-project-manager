@@ -96,10 +96,6 @@ public class TableController implements Initializable {
                     // Select the last row so it's highlighted
                     table.getSelectionModel().select(lastIndex);
                 });
-
-                // Saving the currently loaded table's information
-                saveTableInfo();
-
             } catch (SQLTimeoutException SQLTOE) {
                 ManagerController.showErrorDialog("ERROR: Your request to load the database tables has timed out.");
             } catch (SQLException SQLE) {
@@ -201,11 +197,16 @@ public class TableController implements Initializable {
                     KEYS.add(resultSetKeys.getString(columnIndex));
                 }
             }
+            // Saving which indexes the Primary Keys are (for delete and update)
+            getKeyColumnIndex(KEYS);
+            // Saving the order of columns
+            columnOrder = getTableColumnOrder();
+
         } catch (Exception e) {
             ManagerController.showErrorDialog("ERROR: Unknown error occurred. :(");
         }
     }
-    private void getIndexColumnIndex(ArrayList<String> columnNames) {
+    private void getKeyColumnIndex(List<String> columnNames) {
         ObservableList<TableColumn<TableRowData, ?>> columns = table.getColumns();
         for (int i = 0; i < columns.size(); i++) {
             TableColumn<?, ?> column = columns.get(i);
@@ -213,7 +214,6 @@ public class TableController implements Initializable {
                 KEYINDEXES.add(i);
             }
         }
-        System.out.println("KEYS:" + KEYINDEXES);
     }
     private List<String> getTableColumnOrder(){
         ObservableList<TableColumn<TableRowData, ?>> columns = table.getColumns();
@@ -236,12 +236,61 @@ public class TableController implements Initializable {
         }
         return columnsMatch;
     }
-    public void deleteRow(){
-        if(!checkColumnOrderMatch()){
-            ManagerController.showErrorDialog("Cannot delete if the columns of the table have " +
-                    "been rearranged!");
-        }else{
-            //DELETE FUNCTIONALITY
+    //TODO
+    //If deleting after insert or inserting after deleting app crashes
+    public void deleteRow() {
+        if (!checkColumnOrderMatch()) {
+            ManagerController.showErrorDialog("Cannot delete if the columns of the table have been rearranged!");
+        } else {
+            TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
+            List<String> currentRowData = currentRow.getAllDataFromRow();
+            StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
+
+            if (KEYS.size() != 0) {
+                for (int i = 0; i < KEYS.size(); i++) {
+                    System.out.printf("KEYS.get(i): %s%n", KEYS.get(i));
+                    System.out.printf("KEYINDEXES.get(i): %s%n", KEYINDEXES.get(i));
+                    System.out.printf("currentRowData.get(KEYINDEXES.get(i)): %s%n", currentRowData.get(KEYINDEXES.get(i)));
+
+                    deleteSQL.append(KEYS.get(i));
+                    deleteSQL.append(" = '");
+                    deleteSQL.append(currentRowData.get(KEYINDEXES.get(i)));
+                    deleteSQL.append("' AND ");
+                }
+                // Remove the last 4 characters (AND_)
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+            } else {
+                for (int i = 0; i < currentRowData.size(); i++) {
+                    System.out.printf("columnOrder.get(i): %s%n", columnOrder.get(i));
+                    System.out.printf("currentRowData.get(i): %s%n", currentRowData.get(i));
+
+                    deleteSQL.append(columnOrder.get(i));
+                    deleteSQL.append(" = '");
+                    deleteSQL.append(currentRowData.get(i));
+                    deleteSQL.append("' AND ");
+                }
+                // Remove the last 4 characters (AND_)
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+            }
+
+            System.out.println(deleteSQL);
+
+            try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+                Statement statement = connection.createStatement();
+                statement.execute(deleteSQL.toString());
+
+                ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
+
+                initTable();
+            } catch (Exception ex) {
+                ManagerController.showErrorDialog(ex.getMessage());
+            }
         }
     }
     @Override
@@ -251,7 +300,11 @@ public class TableController implements Initializable {
         selectedTable = ManagerController.selectedTable;
         // Initialize table
         initTable();
-        // Saving the order of columns
-        columnOrder = getTableColumnOrder();
+        // Saving the currently loaded table's information
+        try {
+            saveTableInfo();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
