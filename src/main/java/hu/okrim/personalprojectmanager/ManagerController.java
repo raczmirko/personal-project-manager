@@ -28,7 +28,7 @@ import java.util.*;
 public class ManagerController implements Initializable {
     private Paint lastColour = null;
     public static String selectedTable = null;
-    String currentConnectionURL = null;
+    public static String currentConnectionURL = null;
     @FXML
     public ToggleGroup groupDatabaseType;
     @FXML
@@ -62,14 +62,14 @@ public class ManagerController implements Initializable {
 
     //---------------------------FUNCTIONS---------------------------------
     // LOGIN-related functions
-    public void showErrorDialog(String message) {
+    public static void showErrorDialog(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
-    public void showHelpDialog(String title, String message) {
+    public static void showHelpDialog(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Information");
         alert.setHeaderText(title);
@@ -107,6 +107,8 @@ public class ManagerController implements Initializable {
         }
     }
     private void finalizeConnection(String database, String connectionURL, boolean autoLogin) {
+        // Saving the passed URL into a variable
+        currentConnectionURL = connectionURL;
         // Establish connection
         try (Connection connection = ConnectionController.establishConnection(connectionURL)){
             // Only show the connection popup if connecting manually
@@ -390,7 +392,7 @@ public class ManagerController implements Initializable {
                 Color.rgb(99, 183, 183),   // Pastel Teal
                 Color.rgb(200, 77, 142),   // Royal Lilac
                 Color.rgb(133, 113, 83),  // Dark Khaki
-                Color.rgb(245, 189, 2)    // Royal Gold
+                Color.rgb(27, 121, 49)    // Deep Emerald
         };
         Paint currentColor;
         // If the randomly chose colour is the same as the previous one, re-pick
