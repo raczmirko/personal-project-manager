@@ -67,6 +67,7 @@ public class ManagerController implements Initializable {
         alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.showAndWait();
     }
     public static void showHelpDialog(String title, String message) {
