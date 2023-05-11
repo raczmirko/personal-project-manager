@@ -7,9 +7,6 @@
 <?import javafx.scene.text.*?>
 
 <VBox alignment="CENTER" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
-    <padding>
-        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-    </padding>
     <MenuBar>
         <Menu mnemonicParsing="false" text="File">
             <MenuItem mnemonicParsing="false" text="Close" />
@@ -20,10 +17,13 @@
         <Menu mnemonicParsing="false" text="Help">
             <MenuItem mnemonicParsing="false" text="About" />
         </Menu>
+      <VBox.margin>
+         <Insets bottom="5.0" />
+      </VBox.margin>
     </MenuBar>
     <SplitPane dividerPositions="0.29797979797979796" pickOnBounds="false" prefHeight="100.0" stylesheets="@styles.css">
         <VBox.margin>
-            <Insets bottom="5.0" />
+            <Insets bottom="5.0" left="5.0" right="5.0" />
         </VBox.margin>
         <ImageView pickOnBounds="true" preserveRatio="true">
             <viewport>
@@ -202,5 +202,8 @@
         <Tab closable="false" text="Analyse Data">
             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
         </Tab>
+      <VBox.margin>
+         <Insets bottom="5.0" left="5.0" right="5.0" />
+      </VBox.margin>
     </TabPane>
 </VBox>
