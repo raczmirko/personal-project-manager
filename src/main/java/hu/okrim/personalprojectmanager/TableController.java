@@ -105,6 +105,17 @@ public class TableController implements Initializable {
             ManagerController.showErrorDialog(e.getMessage());
         }
     }
+    public void reloadTable() {
+        // Clear the existing items from the TableView
+        table.getItems().clear();
+
+        // Clear the existing columns from the TableView
+        table.getColumns().clear();
+
+        // Reinitialize the TableView with the default columns and data
+        initTable();
+    }
+
     public void insertRow() {
         ArrayList<String> dataToInsert = new ArrayList<>();
         // Only let us insert if the table is not re-ordered
@@ -146,7 +157,7 @@ public class TableController implements Initializable {
                 ManagerController.showHelpDialog("INSERT successful", "You have successfully " +
                             "inserted into the " + selectedTable + " table.");
                 // Re-initializate the table to add another input field, etc.
-                initTable();
+                reloadTable();
             }catch (Exception ex){
                 ManagerController.showErrorDialog(ex.getMessage());
             }
@@ -236,12 +247,18 @@ public class TableController implements Initializable {
         }
         return columnsMatch;
     }
-    //TODO
-    //If deleting after insert or inserting after deleting app crashes
     public void deleteRow() {
         if (!checkColumnOrderMatch()) {
             ManagerController.showErrorDialog("Cannot delete if the columns of the table have been rearranged!");
-        } else {
+        }
+        else if (table.getSortOrder().isEmpty() && table.getSelectionModel().getFocusedIndex() == table.getItems().size()-1) {
+            // If the table is not sorted AND we are standing on the last index
+            // This means that we are on the empty row that is used to insert new data
+            // So we shouldn't be able to run delete on an empty row (doesn't even exist in DB)
+            ManagerController.showErrorDialog("Please select a row to be deleted! You are " +
+                    "currently standing on an empty row.");
+        }
+        else {
             TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
             List<String> currentRowData = currentRow.getAllDataFromRow();
             StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
@@ -286,8 +303,7 @@ public class TableController implements Initializable {
                 statement.execute(deleteSQL.toString());
 
                 ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
-
-                initTable();
+                reloadTable();
             } catch (Exception ex) {
                 ManagerController.showErrorDialog(ex.getMessage());
             }
