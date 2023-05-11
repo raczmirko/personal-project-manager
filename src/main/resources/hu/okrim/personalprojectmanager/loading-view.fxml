@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER" maxHeight="154.0" maxWidth="344.0" minHeight="154.0" minWidth="344.0"
+      prefHeight="154.0" prefWidth="344.0" xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hu.okrim.personalprojectmanager.LoadingController">
+   <Label text="Trying to connect...">
+      <font>
+         <Font name="Unispace-Bold" size="18.0"/>
+      </font>
+   </Label>
+   <ProgressBar fx:id="progressbar" prefHeight="25.0" prefWidth="270.0" progress="0.0">
+      <VBox.margin>
+         <Insets bottom="10.0" top="10.0"/>
+      </VBox.margin>
+   </ProgressBar>
+   <Label text="This may take up to 1 minute...">
+      <font>
+         <Font name="Unispace-Bold" size="14.0"/>
+      </font>
+   </Label>
+</VBox>
