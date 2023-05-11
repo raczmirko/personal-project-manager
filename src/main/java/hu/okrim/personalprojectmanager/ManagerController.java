@@ -1,5 +1,6 @@
 package hu.okrim.personalprojectmanager;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -16,7 +17,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class ManagerController implements Initializable {
     private Paint lastColour = null;
@@ -110,23 +111,45 @@ public class ManagerController implements Initializable {
     private void finalizeConnection(String database, String connectionURL, boolean autoLogin) {
         // Saving the passed URL into a variable
         currentConnectionURL = connectionURL;
-        // Establish connection
-        try (Connection connection = ConnectionController.establishConnection(connectionURL)){
-            // Only show the connection popup if connecting manually
-            if(!autoLogin){
-                showHelpDialog("Connection Successful!", "You have successfully connected to the " +
-                        "database!");
+
+        if (autoLogin) {
+            // Establish connection
+            try (Connection connection = ConnectionController.establishConnection(connectionURL)) {
+                // Saving the current connected DB into a variable for easy access
+                currentDatabase = database;
+                // Loading the results into the listView on the Manage Data tab
+                showTablesInList(connection);
+                // Adding eventListener to the ListView
+                createListViewListeners(listViewTables);
+            } catch (SQLException ex) {
+                showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
+                        " all the credentials correctly!");
             }
-            // Saving the current connected DB into a variable for easy access
-            currentDatabase = database;
-            // Loading the results into the listView on the Manage Data tab
-            showTablesInList(connection);
-            // Adding eventListener to the ListView
-            createListViewListeners(listViewTables);
-        } catch (SQLException ex){
-            showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
-                    " all the credentials correctly!");
-            System.out.println(ex.getMessage());
+        } else {
+            // Establish connection manually
+            CompletableFuture<Connection> connectionFuture =
+                    ConnectionController.establishManualConnection(connectionURL);
+
+            connectionFuture.thenAccept(connection -> {
+                if (connection != null) {
+                    // Connection succeeded
+                    Platform.runLater(() -> {
+                        currentDatabase = database;
+                        showTablesInList(connection);
+                        createListViewListeners(listViewTables);
+                        showHelpDialog("Connection Successful!",
+                                "You have successfully connected to the database!");
+                    });
+                } else {
+                    // Connection failed
+                    Platform.runLater(() -> showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
+                            " all the credentials correctly!"));
+                }
+            }).exceptionally(exception -> {
+                // Handle exception
+                Platform.runLater(() -> showErrorDialog(exception.getMessage()));
+                return null;
+            });
         }
     }
 
