@@ -32,7 +32,8 @@ public class TableController implements Initializable {
     public void initTable() {
         // Getting everything from the currently selected table
         String sqlSelect = "SELECT * FROM " + selectedTable;
-        try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+        try (Connection connection =
+                     ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
             try {
                 // Running query to get the column information from INFORMATION_SCHEMA
                 Statement statement = connection.createStatement();
@@ -175,7 +176,8 @@ public class TableController implements Initializable {
                             "AND CONSTRAINT_NAME LIKE '%PK%' \n" +
                             "OR TABLE_NAME = '" + selectedTable + "' AND \n" +
                             "CONSTRAINT_NAME LIKE '%PRIMARY%'";
-        try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+        try (Connection connection =
+                     ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
 
             // Saving the column information
             // Running query to get the column information from INFORMATION_SCHEMA
@@ -275,10 +277,6 @@ public class TableController implements Initializable {
                     deleteSQL.append("' AND ");
                 }
                 // Remove the last 4 characters (AND_)
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
             } else {
                 for (int i = 0; i < currentRowData.size(); i++) {
                     System.out.printf("columnOrder.get(i): %s%n", columnOrder.get(i));
@@ -290,18 +288,18 @@ public class TableController implements Initializable {
                     deleteSQL.append("' AND ");
                 }
                 // Remove the last 4 characters (AND_)
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
             }
+            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
 
             System.out.println(deleteSQL);
 
-            try (Connection connection = ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+            try (Connection connection =
+                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
                 Statement statement = connection.createStatement();
                 statement.execute(deleteSQL.toString());
-
                 ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
                 reloadTable();
             } catch (Exception ex) {
