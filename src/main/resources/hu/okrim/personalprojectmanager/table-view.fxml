@@ -48,7 +48,7 @@
             <Font name="Unispace-Bold" size="14.0" />
          </font>
       </Button>
-      <Button fx:id="btnUpdate" maxWidth="1.7976931348623157E308" mnemonicParsing="false" style="-fx-background-color: #ff9900;" text="Update" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
+      <Button fx:id="btnUpdate" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#updateRow" style="-fx-background-color: #ff9900;" text="Update" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
          <font>
             <Font name="Unispace-Bold" size="14.0" />
          </font>
