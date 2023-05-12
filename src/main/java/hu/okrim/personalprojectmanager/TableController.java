@@ -274,39 +274,42 @@ public class TableController implements Initializable {
                     "currently standing on an empty row.");
         }
         else {
-            TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
-            List<String> currentRowData = currentRow.getAllDataFromRow();
-            StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
-            if (KEYS.size() != 0) {
-                for (int i = 0; i < KEYS.size(); i++) {
-                    deleteSQL.append(KEYS.get(i));
-                    deleteSQL.append(" = '");
-                    deleteSQL.append(currentRowData.get(findColumnIndex(KEYS.get(i))));
-                    deleteSQL.append("' AND ");
+            if (ManagerController.showConfirmationDialog("Confirm DELETE operation!",
+                    "Are you sure want to delete the selected row? Click OK to proceed!")) {
+                TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
+                List<String> currentRowData = currentRow.getAllDataFromRow();
+                StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
+                if (KEYS.size() != 0) {
+                    for (int i = 0; i < KEYS.size(); i++) {
+                        deleteSQL.append(KEYS.get(i));
+                        deleteSQL.append(" = '");
+                        deleteSQL.append(currentRowData.get(findColumnIndex(KEYS.get(i))));
+                        deleteSQL.append("' AND ");
+                    }
+                    // Remove the last 4 characters (AND_)
+                } else {
+                    for (int i = 0; i < currentRowData.size(); i++) {
+                        deleteSQL.append(columnOrder.get(i));
+                        deleteSQL.append(" = '");
+                        deleteSQL.append(currentRowData.get(i));
+                        deleteSQL.append("' AND ");
+                    }
+                    // Remove the last 4 characters (AND_)
                 }
-                // Remove the last 4 characters (AND_)
-            } else {
-                for (int i = 0; i < currentRowData.size(); i++) {
-                    deleteSQL.append(columnOrder.get(i));
-                    deleteSQL.append(" = '");
-                    deleteSQL.append(currentRowData.get(i));
-                    deleteSQL.append("' AND ");
-                }
-                // Remove the last 4 characters (AND_)
-            }
-            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-            deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
 
-            try (Connection connection =
-                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
-                Statement statement = connection.createStatement();
-                statement.execute(deleteSQL.toString());
-                ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
-                reloadTable();
-            } catch (Exception ex) {
-                ManagerController.showErrorDialog(ex.getMessage());
+                try (Connection connection =
+                             ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+                    Statement statement = connection.createStatement();
+                    statement.execute(deleteSQL.toString());
+                    ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
+                    reloadTable();
+                } catch (Exception ex) {
+                    ManagerController.showErrorDialog(ex.getMessage());
+                }
             }
         }
     }
@@ -320,56 +323,59 @@ public class TableController implements Initializable {
                     "Please reset the sorting of the columns.");
         }
         else {
-            // Get the index of the selected row (thus the row to be edited)
-            TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
-            // Saving the row's information to a list
-            List<String> currentRowData = currentRow.getAllDataFromRow();
-            StringBuilder updateSQL = new StringBuilder("UPDATE " + selectedTable + " SET ");
-            for(int i = 0; i < COLUMNNAMES.size(); i++){
-                updateSQL.append(COLUMNNAMES.get(i));
-                updateSQL.append(" = '");
-                updateSQL.append(currentRowData.get(i));
-                updateSQL.append("', ");
-            }
-            // Delete the last 2 characters after the loop (,_)
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
-            updateSQL.append(" WHERE ");
-            if (KEYS.size() != 0) {
-                for (int i = 0; i < KEYS.size(); i++) {
-                    updateSQL.append(KEYS.get(i));
-                    updateSQL.append(" = '");
-                    // The column indexes are not stored in the same order as the columns themselves
-                    // We have a list of the names of the primary keys of the table
-                    // So we can find the key column's locations by their names
-                    updateSQL.append(currentRowDataBeforeModified.get(findColumnIndex(KEYS.get(i))));
-                    updateSQL.append("' AND ");
-                }
-            } else {
-                for (int i = 0; i < currentRowData.size(); i++) {
-                    updateSQL.append(columnOrder.get(i));
+            if (ManagerController.showConfirmationDialog("Confirm UPDATE operation!",
+                    "Are you sure want to modify the selected row? Click OK to proceed!")) {
+                // Get the index of the selected row (thus the row to be edited)
+                TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
+                // Saving the row's information to a list
+                List<String> currentRowData = currentRow.getAllDataFromRow();
+                StringBuilder updateSQL = new StringBuilder("UPDATE " + selectedTable + " SET ");
+                for(int i = 0; i < COLUMNNAMES.size(); i++){
+                    updateSQL.append(COLUMNNAMES.get(i));
                     updateSQL.append(" = '");
                     updateSQL.append(currentRowData.get(i));
-                    updateSQL.append("' AND ");
+                    updateSQL.append("', ");
                 }
-            }
-            // Remove the last 4 characters (AND_)
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
-            updateSQL.deleteCharAt(updateSQL.length() - 1);
+                // Delete the last 2 characters after the loop (,_)
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
+                updateSQL.append(" WHERE ");
+                if (KEYS.size() != 0) {
+                    for (int i = 0; i < KEYS.size(); i++) {
+                        updateSQL.append(KEYS.get(i));
+                        updateSQL.append(" = '");
+                        // The column indexes are not stored in the same order as the columns themselves
+                        // We have a list of the names of the primary keys of the table
+                        // So we can find the key column's locations by their names
+                        updateSQL.append(currentRowDataBeforeModified.get(findColumnIndex(KEYS.get(i))));
+                        updateSQL.append("' AND ");
+                    }
+                } else {
+                    for (int i = 0; i < currentRowData.size(); i++) {
+                        updateSQL.append(columnOrder.get(i));
+                        updateSQL.append(" = '");
+                        updateSQL.append(currentRowData.get(i));
+                        updateSQL.append("' AND ");
+                    }
+                }
+                // Remove the last 4 characters (AND_)
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
+                updateSQL.deleteCharAt(updateSQL.length() - 1);
 
-            System.out.println(updateSQL);
+                System.out.println(updateSQL);
 
-            try (Connection connection =
-                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
-                Statement statement = connection.createStatement();
-                statement.execute(updateSQL.toString());
-                ManagerController.showHelpDialog("UPDATE successful", "You have successfully " +
-                        "updated from the selected row.");
-                reloadTable();
-            } catch (Exception ex) {
-                ManagerController.showErrorDialog(ex.getMessage());
+                try (Connection connection =
+                             ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+                    Statement statement = connection.createStatement();
+                    statement.execute(updateSQL.toString());
+                    ManagerController.showHelpDialog("UPDATE successful", "You have successfully " +
+                            "updated from the selected row.");
+                    reloadTable();
+                } catch (Exception ex) {
+                    ManagerController.showErrorDialog(ex.getMessage());
+                }
             }
         }
     }

@@ -79,6 +79,16 @@ public class ManagerController implements Initializable {
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.showAndWait();
     }
+    public static boolean showConfirmationDialog(String title, String message) {
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Confirm your action!");
+        confirmation.setHeaderText(title);
+        confirmation.setContentText(message);
+        confirmation.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        confirmation.showAndWait();
+        // Return TRUE if user clicked OK, and FALSE if the user cancelled
+        return confirmation.getResult() == ButtonType.OK;
+    }
     public void loginDirect(){
         //Checking if the input is not null
         String server = inputServer.getText();
