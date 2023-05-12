@@ -125,7 +125,6 @@ public class TableController implements Initializable {
         // Reinitialize the TableView with the default columns and data
         initTable();
     }
-
     public void saveTableInfo() throws SQLException {
         String sqlColumns = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS\n" +
                 "WHERE TABLE_NAME = '" + selectedTable + "'";
