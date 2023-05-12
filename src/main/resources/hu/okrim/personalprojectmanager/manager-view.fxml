@@ -9,13 +9,10 @@
 <VBox alignment="CENTER" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hu.okrim.personalprojectmanager.ManagerController">
     <MenuBar>
         <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="Close" />
-        </Menu>
-        <Menu mnemonicParsing="false" text="Edit">
-            <MenuItem mnemonicParsing="false" text="Delete" />
+            <MenuItem mnemonicParsing="false" onAction="#stopApplication" text="Close" />
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
-            <MenuItem mnemonicParsing="false" text="About" />
+            <MenuItem mnemonicParsing="false" onAction="#showAbout" text="About" />
         </Menu>
       <VBox.margin>
          <Insets bottom="5.0" />
@@ -196,11 +193,45 @@
                             </GridPane.margin>
                         </Button>
                     </GridPane>
+               <Label alignment="CENTER" contentDisplay="CENTER" text="Status" textAlignment="CENTER" wrapText="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                  <font>
+                     <Font name="Unispace-Bold" size="20.0" />
+                  </font>
+               </Label>
+               <Label fx:id="connectionStatusLabel" alignment="CENTER" contentDisplay="CENTER" text="Not Connected" textAlignment="CENTER" textFill="#f40202" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                  <font>
+                     <Font name="Unispace-Bold" size="20.0" />
+                  </font>
+               </Label>
                 </GridPane>
             </AnchorPane>
         </Tab>
-        <Tab closable="false" text="Analyse Data">
-            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+        <Tab closable="false" text="Views">
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                <SplitPane dividerPositions="-1.0" orientation="VERTICAL" prefHeight="200.0"
+                           prefWidth="160.0" AnchorPane.bottomAnchor="0.0"
+                           AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                           AnchorPane.topAnchor="0.0">
+                    <AnchorPane style="-fx-background-color: #ff9900;">
+                        <Label alignment="CENTER"
+                               text="TIP: Double click on any table to open the editor! You can use the arrow keys and ENTER too."
+                               wrapText="true" AnchorPane.leftAnchor="0.0"
+                               AnchorPane.rightAnchor="0.0">
+                            <font>
+                                <Font name="Unispace-Bold" size="14.0"/>
+                            </font>
+                            <padding>
+                                <Insets bottom="5.0" top="5.0"/>
+                            </padding>
+                        </Label>
+                    </AnchorPane>
+                    <AnchorPane style="-fx-background-color: #4bc869;">
+                        <ListView fx:id="listViewViews" AnchorPane.bottomAnchor="0.0"
+                                  AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                  AnchorPane.topAnchor="0.0"/>
+                    </AnchorPane>
+                </SplitPane>
+            </AnchorPane>
         </Tab>
       <VBox.margin>
          <Insets bottom="5.0" left="5.0" right="5.0" />
