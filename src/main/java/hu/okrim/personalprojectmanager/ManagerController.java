@@ -29,7 +29,9 @@ import java.util.concurrent.CompletableFuture;
 public class ManagerController implements Initializable {
     private Paint lastColour = null;
     public static String selectedTable = null;
+    public static String selectedView = null;
     public static String currentConnectionURL = null;
+    private String currentDatabase;
     @FXML
     public ToggleGroup groupDatabaseType;
     @FXML
@@ -37,7 +39,7 @@ public class ManagerController implements Initializable {
     @FXML
     public Button btnLoadLoginFromFile;
     @FXML
-    private String currentDatabase;
+    public Label connectionStatusLabel;
     // Input Fields
     @FXML
     private TextField inputServer;
@@ -55,6 +57,8 @@ public class ManagerController implements Initializable {
     // Other components
     @FXML
     private ListView<String> listViewTables;
+    @FXML
+    private ListView<String> listViewViews;
     // RadioButtons
     @FXML
     private RadioButton radioDerby;
@@ -126,45 +130,50 @@ public class ManagerController implements Initializable {
             // Establish connection
             try (Connection connection = ConnectionController.establishConnection(connectionURL)) {
                 // Saving the current connected DB into a variable for easy access
-                currentDatabase = database;
-                // Loading the results into the listView on the Manage Data tab
-                showTablesInList(connection);
-                // Adding eventListener to the ListView
-                createListViewListeners(listViewTables);
+                initializeGUIAfterLogin(database, connection);
+                updateStatusLabel(true,true);
             } catch (SQLException ex) {
                 showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
                         " all the credentials correctly!");
+                updateStatusLabel(false,true);
             }
         } else {
             // Establish connection manually
             CompletableFuture<Connection> connectionFuture =
                     ConnectionController.establishManualConnection(connectionURL);
-
             connectionFuture.thenAccept(connection -> {
                 if (connection != null) {
                     // Connection succeeded
                     Platform.runLater(() -> {
-                        currentDatabase = database;
-                        showTablesInList(connection);
-                        createListViewListeners(listViewTables);
+                        initializeGUIAfterLogin(database, connection);
                         showHelpDialog("Connection Successful!",
                                 "You have successfully connected to the database!");
+                        updateStatusLabel(true,false);
                     });
                 } else {
                     // Connection failed
                     Platform.runLater(() -> showErrorDialog("ERROR: There was an error at the server login. Check if you gave" +
                             " all the credentials correctly!"));
+                    updateStatusLabel(false,false);
                 }
             }).exceptionally(exception -> {
                 // Handle exception
                 Platform.runLater(() -> showErrorDialog(exception.getMessage()));
+                updateStatusLabel(false,false);
                 return null;
             });
         }
     }
+    private void initializeGUIAfterLogin(String database, Connection connection) {
+        currentDatabase = database;
+        showTablesInList(connection, listViewTables);
+        createListViewListeners(listViewTables);
+        showTablesInList(connection, listViewViews);
+        createListViewListeners(listViewViews);
+    }
 
     // Background login when not logging in directly on the GUI
-    public void loginAuto(){
+    private void loginAuto(){
         //-----------------------------------VARIABLES-------------------------------------
         String defaultConfigPath = "src/main/resources/hu/okrim/personalprojectmanager" +
                 "/server.JSON";
@@ -183,7 +192,7 @@ public class ManagerController implements Initializable {
             finalizeConnection(database, connectionURL, true);
         }
     }
-    public void saveNewLoginInfo(String server, String db, String user, String password){
+    private void saveNewLoginInfo(String server, String db, String user, String password){
         //At this point exceptions are already checked for
         FileWriter writer = null;
         try{
@@ -202,7 +211,7 @@ public class ManagerController implements Initializable {
             }
         }
     }
-    public void saveNewLoginInfo(String server, String db, String user){
+    private void saveNewLoginInfo(String server, String db, String user){
         //At this point exceptions are already checked for
         FileWriter writer = null;
         try{
@@ -241,7 +250,7 @@ public class ManagerController implements Initializable {
             }
         }
     }
-    public ArrayList<String> loadLoginInfo(String path){
+    private ArrayList<String> loadLoginInfo(String path){
         ArrayList<String> loginInfo = new ArrayList<>();
         Scanner scanner;
         try{
@@ -266,7 +275,7 @@ public class ManagerController implements Initializable {
         }
         return loginInfo;
     }
-    public File loadLoginInfoFile(){
+    private File loadLoginInfoFile(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose A File!");
 
@@ -350,11 +359,19 @@ public class ManagerController implements Initializable {
             showErrorDialog("ERROR: Servertype config files not found! :(");
         }
     }
-    public void showTablesInList(Connection connection){
-        String sqlString =  "SELECT TABLE_NAME\n" +
-                            "FROM INFORMATION_SCHEMA.TABLES\n" +
-                            "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
-                            "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
+    public void showTablesInList(Connection connection, ListView<String> listView){
+        String sqlString;
+        if (listView == listViewTables) {
+            sqlString = "SELECT TABLE_NAME\n" +
+                                "FROM INFORMATION_SCHEMA.TABLES\n" +
+                                "WHERE TABLE_TYPE = 'BASE TABLE'\n" +
+                                "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
+        } else {
+            sqlString = "SELECT TABLE_NAME\n" +
+                    "FROM INFORMATION_SCHEMA.TABLES\n" +
+                    "WHERE TABLE_TYPE = 'VIEW'\n" +
+                    "  AND TABLE_CATALOG = '" + currentDatabase + "'\n";
+        }
         try{
             Statement statement = connection.createStatement();
             // Execute the CREATE TABLE statement
@@ -370,9 +387,9 @@ public class ManagerController implements Initializable {
             ObservableList<String> items = FXCollections.observableArrayList(tableNames);
 
             // Set the cell factory for the ListView to produce fun colourful cells
-            setCellFactory(listViewTables);
+            setCellFactory(listView);
             // Set the items in the ListView
-            listViewTables.setItems(items);
+            listView.setItems(items);
         } catch (SQLTimeoutException SQLTOE){
             showErrorDialog("ERROR: You request to load the database tables has timed out.");
         } catch(SQLException SQLE){
@@ -416,6 +433,19 @@ public class ManagerController implements Initializable {
             throw new RuntimeException(e);
         }
     }
+    public void showViewPopup(){
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(ManagerApplication.class.getResource("view" +
+                    "-view.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            Stage tableStage = new Stage();
+            tableStage.setTitle("Personal Project Manager - Views");
+            tableStage.setScene(scene);
+            tableStage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private Paint pickRandomColor() {
         Paint[] colors = {
                 Color.rgb(129, 190, 131),   // Payton
@@ -437,29 +467,65 @@ public class ManagerController implements Initializable {
         // Between index 0 and length of the list
         return currentColor;
     }
-    public void createListViewListeners(ListView<String> listView){
+    private void createListViewListeners(ListView<String> listView){
         // Adding a click listener for double clicks
         listView.setOnMouseClicked(event -> {
-            String selectedTableName = listView.getSelectionModel().getSelectedItem();
-            if (selectedTableName != null) {
+            String selectedElementName = listView.getSelectionModel().getSelectedItem();
+            if (selectedElementName != null) {
                 if (event.getClickCount() > 1) {
-                    System.out.println("Selected table: " + selectedTableName);
-                    selectedTable = selectedTableName;
-                    showTablePopup();
+                    if (listView == listViewTables) {
+                        selectedTable = selectedElementName;
+                        showTablePopup();
+                    } else {
+                        selectedView = selectedElementName;
+                        showViewPopup();
+                    }
                 }
             }
         });
         // Adding a keyboard listener for enter
         listView.setOnKeyPressed(event -> {
-            String selectedTableName = listView.getSelectionModel().getSelectedItem();
-            if (selectedTableName != null) {
+            String selectedElementName = listView.getSelectionModel().getSelectedItem();
+            if (selectedElementName != null) {
                 if (event.getCode() == KeyCode.ENTER) {
-                    System.out.println("Selected table: " + selectedTableName);
-                    selectedTable = selectedTableName;
-                    showTablePopup();
+                    if (listView == listViewTables) {
+                        selectedTable = selectedElementName;
+                        showTablePopup();
+                    } else {
+                        selectedView = selectedElementName;
+                        showViewPopup();
+                    }
                 }
             }
         });
+    }
+    public void stopApplication(){
+        Platform.exit();
+    }
+    public void showAbout(){
+        showHelpDialog("About Personal Project Manager", """
+                This application was developed by Mirkó Rácz in May, 2023.
+                \nI have always loved manifesting my ideas, and this project didn't start any different: I had a useful idea that I wanted to make reality.
+                \nThank you for checking this project out!""");
+    }
+    public void updateStatusLabel(boolean success,boolean autologin){
+        if (success) {
+            if(autologin){
+                connectionStatusLabel.setText("Auto-connection successful.");
+                connectionStatusLabel.setTextFill(Color.DARKGREEN);
+            }else{
+                connectionStatusLabel.setText("Connection successful.");
+                connectionStatusLabel.setTextFill(Color.DARKGREEN);
+            }
+        } else{
+            if(autologin){
+                connectionStatusLabel.setText("Auto-connection failed.");
+                connectionStatusLabel.setTextFill(Color.RED);
+            }else{
+                connectionStatusLabel.setText("Connection failed.");
+                connectionStatusLabel.setTextFill(Color.RED);
+            }
+        }
     }
     // Startup functions
     @Override
