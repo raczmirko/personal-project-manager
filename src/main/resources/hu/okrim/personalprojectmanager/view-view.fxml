@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+      minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0"
+      style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hu.okrim.personalprojectmanager.ViewController">
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+    </padding>
+    <SplitPane dividerPositions="0.29797979797979796" pickOnBounds="false" prefHeight="64.0" stylesheets="@styles.css">
+        <ImageView pickOnBounds="true" preserveRatio="true">
+            <viewport>
+                <Rectangle2D />
+            </viewport>
+            <Image url="@icon.png" />
+        </ImageView>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" style="-fx-background-color: #e8694b;">
+            <Label alignment="CENTER" layoutX="5.0" layoutY="11.0" text="Personal Project Manager" textAlignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <font>
+                    <Font name="Unispace-Bold" size="31.0" />
+                </font>
+            </Label>
+        </AnchorPane>
+    </SplitPane>
+    <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+        <VBox.margin>
+            <Insets bottom="5.0" />
+        </VBox.margin>
+        <TableView fx:id="tableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+            <columns>
+            </columns>
+        </TableView>
+    </ScrollPane>
+</VBox>
