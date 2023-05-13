@@ -9,6 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -17,10 +18,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.URL;
 import java.sql.*;
 import java.util.*;
@@ -428,6 +427,7 @@ public class ManagerController implements Initializable {
             Stage tableStage = new Stage();
             tableStage.setTitle("Personal Project Manager - Editor");
             tableStage.setScene(scene);
+            setStageIcon(tableStage);
             tableStage.show();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -438,12 +438,22 @@ public class ManagerController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(ManagerApplication.class.getResource("view" +
                     "-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
-            Stage tableStage = new Stage();
-            tableStage.setTitle("Personal Project Manager - Views");
-            tableStage.setScene(scene);
-            tableStage.show();
+            Stage viewStage = new Stage();
+            viewStage.setTitle("Personal Project Manager - Views");
+            viewStage.setScene(scene);
+            setStageIcon(viewStage);
+            viewStage.show();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+    private static void setStageIcon(Stage stage){
+        // Set the application icon if it exists
+        InputStream iconStream = ManagerController.class.getResourceAsStream("icon.png");
+        Image icon;
+        if (iconStream != null) {
+            icon = new Image(iconStream);
+            stage.getIcons().add(icon);
         }
     }
     private Paint pickRandomColor() {
