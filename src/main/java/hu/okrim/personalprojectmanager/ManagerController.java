@@ -31,6 +31,12 @@ public class ManagerController implements Initializable {
     public static String selectedView = null;
     public static String currentConnectionURL = null;
     private String currentDatabase;
+    private final String SERVERTYPECONFIGPATH = "src/main/resources/hu/okrim" +
+            "/personalprojectmanager" +
+            "/servertype.JSON";
+    private final String SERVERCONFIGPATH = "src/main/resources/hu/okrim" +
+            "/personalprojectmanager" +
+            "/server.JSON";
     @FXML
     public ToggleGroup groupDatabaseType;
     @FXML
@@ -174,9 +180,7 @@ public class ManagerController implements Initializable {
     // Background login when not logging in directly on the GUI
     private void loginAuto(){
         //-----------------------------------VARIABLES-------------------------------------
-        String defaultConfigPath = "src/main/resources/hu/okrim/personalprojectmanager" +
-                "/server.JSON";
-        ArrayList<String> loginInfo = loadLoginInfo(defaultConfigPath);
+        ArrayList<String> loginInfo = loadLoginInfo(SERVERCONFIGPATH);
         String connectionURL;
         if(loginInfo.size() == 4){
             connectionURL = ConnectionController.getConnectionURLSS(
@@ -195,8 +199,7 @@ public class ManagerController implements Initializable {
         //At this point exceptions are already checked for
         FileWriter writer = null;
         try{
-            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
-            writer = new FileWriter(filePath);
+            writer = new FileWriter(SERVERCONFIGPATH);
             writer.write('"' + server + ";" + db + ";" + user + ";" + password + '"');
         } catch(IOException exception){
             showErrorDialog("ERROR: Server configuration file is not found. :(");
@@ -214,8 +217,7 @@ public class ManagerController implements Initializable {
         //At this point exceptions are already checked for
         FileWriter writer = null;
         try{
-            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/server.JSON";
-            writer = new FileWriter(filePath);
+            writer = new FileWriter(SERVERCONFIGPATH);
             writer.write('"' + server + ";" + db + ";" + user + '"');
         } catch(IOException exception){
             showErrorDialog("ERROR: Server configuration file is not found. :(");
@@ -233,9 +235,7 @@ public class ManagerController implements Initializable {
         String serverType = radioDerby.isSelected() ? "derby" : "ss";
         FileWriter writer = null;
         try{
-            String filePath = "src/main/resources/hu/okrim/personalprojectmanager/servertype" +
-                    ".JSON";
-            writer = new FileWriter(filePath);
+            writer = new FileWriter(SERVERTYPECONFIGPATH);
             writer.write('"' + serverType + '"');
         } catch(IOException exception){
             showErrorDialog("ERROR: Server-type configuration file is not found. :(");
@@ -334,9 +334,7 @@ public class ManagerController implements Initializable {
     public void loadServerTypeRadioButtonState(){
         Scanner scanner;
         try{
-            String serverPath = "src/main/resources/hu/okrim/personalprojectmanager" +
-                    "/servertype.JSON";
-            scanner = new Scanner(new File(serverPath));
+            scanner = new Scanner(new File(SERVERTYPECONFIGPATH));
             // Read the content of the file line by line
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
