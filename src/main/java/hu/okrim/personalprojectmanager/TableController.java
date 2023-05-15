@@ -7,7 +7,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
-
 import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,10 +22,8 @@ public class TableController implements Initializable {
     public Button btnInsert;
     @FXML
     TableView<TableRowData> table;
-
     private final ArrayList<String> COLUMNNAMES = new ArrayList<>();
     private final ArrayList<String> KEYS = new ArrayList<>();
-    private final ArrayList<Integer> KEYINDEXES = new ArrayList<>();
     private String selectedTable;
     List<String> columnOrder;
     List<String> currentRowDataBeforeModified;
@@ -168,22 +165,11 @@ public class TableController implements Initializable {
                     KEYS.add(resultSetKeys.getString(columnIndex));
                 }
             }
-            // Saving which indexes the Primary Keys are (for delete and update)
-            getKeyColumnIndex(KEYS);
             // Saving the order of columns
             columnOrder = getTableColumnOrder();
 
         } catch (Exception e) {
             ManagerController.showErrorDialog("ERROR: Unknown error occurred. :(");
-        }
-    }
-    private void getKeyColumnIndex(List<String> columnNames) {
-        ObservableList<TableColumn<TableRowData, ?>> columns = table.getColumns();
-        for (int i = 0; i < columns.size(); i++) {
-            TableColumn<?, ?> column = columns.get(i);
-            if (columnNames.contains(column.getText())) {
-                KEYINDEXES.add(i);
-            }
         }
     }
     private List<String> getTableColumnOrder(){
@@ -195,80 +181,102 @@ public class TableController implements Initializable {
         }
         return columnOrder;
     }
-    private boolean checkColumnOrderMatch(){
-        boolean columnsMatch = true;
+    private boolean isTableColumnOrderModified(){
+        boolean isModified = false;
         List<String> initialColumns = columnOrder;
         List<String> currentColumns = getTableColumnOrder();
         for(int i = 0; i < initialColumns.size(); i++){
             if(!initialColumns.get(i).equals(currentColumns.get(i))){
-                columnsMatch = false;
+                isModified = true;
                 break;
             }
         }
-        return columnsMatch;
+        return isModified;
     }
-    public void insertRow() {
-        ArrayList<String> dataToInsert = new ArrayList<>();
-        if (!checkColumnOrderMatch()) {
+    public boolean isInsertOperationReady() {
+        if (isTableColumnOrderModified()) {
             ManagerController.showErrorDialog("Cannot insert if the columns of the table have " +
                     "been rearranged!");
+            return false;
         }
         // Only let us insert if the table is not re-ordered
-        else if (table.getSortOrder().isEmpty()) {
-            // We know that if the table is unsorted, then the last row is the row of input
-            // So we get the data of the last row
-            int lastIndex = table.getItems().size() - 1;
-            TableRowData data = table.getItems().get(lastIndex);
-            for(int i = 0; i < table.getColumns().size(); i++){
-                dataToInsert.add(data.getColumnData(i).get());
-            }
-            try (Connection connection =
-                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)){
-                // Building dynamic-SQL query for the INSERT statement
-                StringBuilder insertSQL =
-                        new StringBuilder("INSERT INTO " + selectedTable + " (");
-                for(String s : COLUMNNAMES){
-                    insertSQL.append("[");
-                    insertSQL.append(s);
-                    insertSQL.append("],");
-                }
-                // Remove the last colon
-                insertSQL.deleteCharAt(insertSQL.length() - 1);
-                // Add closing bracket
-                insertSQL.append(") VALUES (");
-                for(String s : dataToInsert){
-                    if (s.isEmpty()) {
-                        insertSQL.append("NULL,");
-                    } else {
-                        insertSQL.append("'");
-                        insertSQL.append(s);
-                        insertSQL.append("',");
-                    }
-                }
-                // Remove the last colon
-                insertSQL.deleteCharAt(insertSQL.length() - 1);
-                // Add closing bracket
-                insertSQL.append(")");
-                // Executing SQL INSERT statement
-                Statement statement = connection.createStatement();
-                statement.execute(insertSQL.toString());
-                // Show a success message dialog upon successfull insertion
-                ManagerController.showHelpDialog("INSERT successful", "You have successfully " +
-                        "inserted into the " + selectedTable + " table.");
-                // Re-initializate the table to add another input field, etc.
-                reloadTable();
-
-            }catch (Exception ex){
-                ManagerController.showErrorDialog(ex.getMessage());
-            }
-        } else {
+        else if (!table.getSortOrder().isEmpty()) {
             ManagerController.showErrorDialog("You cannot insert until the table is custom " +
                     "sorted! Please reset the sorting of the columns!");
+            return false;
+        } else {
+            return true;
         }
     }
-    public void deleteRow() {
-        if (!checkColumnOrderMatch()) {
+    public void attemptInsert(){
+        if(isInsertOperationReady()){
+            runInsert();
+            reloadTable();
+        }
+    }
+    public void runInsert(){
+        ArrayList<String> dataToInsert = getDataToInsertFromTable();
+        try (Connection connection =
+                     ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+            String insertSQL = generateInsertSQLString(dataToInsert);
+            // Executing SQL INSERT statement
+            Statement statement = connection.createStatement();
+            statement.execute(insertSQL);
+            // Show a success message dialog upon successfull insertion
+            ManagerController.showHelpDialog("INSERT successful", "You have successfully " +
+                    "inserted into the " + selectedTable + " table.");
+        } catch (SQLException ex) {
+            ManagerController.showErrorDialog(ex.getMessage());
+        }
+    }
+    private String generateInsertSQLString(ArrayList<String> dataToInsert) {
+        // Building dynamic-SQL query for the INSERT statement
+        StringBuilder insertSQL =
+                new StringBuilder("INSERT INTO " + selectedTable + " (");
+        for (String s : COLUMNNAMES) {
+            insertSQL.append("[");
+            insertSQL.append(s);
+            insertSQL.append("],");
+        }
+        // Remove the last colon
+        insertSQL.deleteCharAt(insertSQL.length() - 1);
+        // Add closing bracket
+        insertSQL.append(") VALUES (");
+        for (String s : dataToInsert) {
+            if (s.isEmpty()) {
+                insertSQL.append("NULL,");
+            } else {
+                insertSQL.append("'");
+                insertSQL.append(s);
+                insertSQL.append("',");
+            }
+        }
+        // Remove the last colon
+        insertSQL.deleteCharAt(insertSQL.length() - 1);
+        // Add closing bracket
+        insertSQL.append(")");
+        return insertSQL.toString();
+    }
+    private ArrayList<String> getDataToInsertFromTable() {
+        ArrayList<String> dataToInsert = new ArrayList<>();
+        // We know that if the table is unsorted, then the last row is the row of input
+        // So we get the data of the last row
+        int lastIndex = table.getItems().size() - 1;
+        TableRowData data = table.getItems().get(lastIndex);
+        for(int i = 0; i < table.getColumns().size(); i++){
+            dataToInsert.add(data.getColumnData(i).get());
+        }
+        return dataToInsert;
+    }
+    public void attemptDelete(){
+        if(isDeleteOperationReady()){
+            runDelete();
+        }
+    }
+    public boolean isDeleteOperationReady() {
+        if (isTableColumnOrderModified()) {
             ManagerController.showErrorDialog("Cannot delete if the columns of the table have been rearranged!");
+            return false;
         }
         else if (table.getSortOrder().isEmpty() && table.getSelectionModel().getFocusedIndex() == table.getItems().size()-1) {
             // If the table is not sorted AND we are standing on the last index
@@ -276,112 +284,139 @@ public class TableController implements Initializable {
             // So we shouldn't be able to run delete on an empty row (doesn't even exist in DB)
             ManagerController.showErrorDialog("Please select a row to be deleted! You are " +
                     "currently standing on an empty row.");
+            return false;
         }
         else {
-            if (ManagerController.showConfirmationDialog("Confirm DELETE operation!",
-                    "Are you sure want to delete the selected row? Click OK to proceed!")) {
-                TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
-                List<String> currentRowData = currentRow.getAllDataFromRow();
-                StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
-                if (KEYS.size() != 0) {
-                    for (int i = 0; i < KEYS.size(); i++) {
-                        deleteSQL.append(KEYS.get(i));
-                        deleteSQL.append(" = '");
-                        deleteSQL.append(currentRowData.get(findColumnIndex(KEYS.get(i))));
-                        deleteSQL.append("' AND ");
-                    }
-                    // Remove the last 4 characters (AND_)
-                } else {
-                    for (int i = 0; i < currentRowData.size(); i++) {
-                        deleteSQL.append(columnOrder.get(i));
-                        deleteSQL.append(" = '");
-                        deleteSQL.append(currentRowData.get(i));
-                        deleteSQL.append("' AND ");
-                    }
-                    // Remove the last 4 characters (AND_)
-                }
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-                deleteSQL.deleteCharAt(deleteSQL.length() - 1);
-
-                try (Connection connection =
-                             ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
-                    Statement statement = connection.createStatement();
-                    statement.execute(deleteSQL.toString());
-                    ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
-                    reloadTable();
-                } catch (Exception ex) {
-                    ManagerController.showErrorDialog(ex.getMessage());
-                }
+            return true;
+        }
+    }
+    private void runDelete() {
+        if (isActionConfirmedByUser("DELETE")) {
+            List<String> currentRowData = getDataFromSelectedRow();
+            String deleteSQL = generateDeleteSQLString(currentRowData);
+            try (Connection connection =
+                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+                Statement statement = connection.createStatement();
+                statement.execute(deleteSQL);
+                ManagerController.showHelpDialog("DELETE successful", "You have successfully deleted from the " + selectedTable + " table.");
+                reloadTable();
+            } catch (Exception ex) {
+                ManagerController.showErrorDialog(ex.getMessage());
             }
         }
     }
-    public void updateRow(){
-        if (!checkColumnOrderMatch()) {
+    private String generateDeleteSQLString(List<String> currentRowData) {
+        StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
+        if (KEYS.size() != 0) {
+            for (String key : KEYS) {
+                deleteSQL.append(key);
+                deleteSQL.append(" = '");
+                deleteSQL.append(currentRowData.get(findColumnIndex(key)));
+                deleteSQL.append("' AND ");
+            }
+            // Remove the last 4 characters (AND_)
+        } else {
+            for (int i = 0; i < currentRowData.size(); i++) {
+                deleteSQL.append(columnOrder.get(i));
+                deleteSQL.append(" = '");
+                deleteSQL.append(currentRowData.get(i));
+                deleteSQL.append("' AND ");
+            }
+            // Remove the last 4 characters (AND_)
+        }
+        deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+        deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+        deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+        deleteSQL.deleteCharAt(deleteSQL.length() - 1);
+        return deleteSQL.toString();
+    }
+    public boolean isUpdateOperationReady(){
+        if (isTableColumnOrderModified()) {
             ManagerController.showErrorDialog("Cannot update if the columns of the table have " +
                     "been rearranged!");
+            return false;
         }
         else if (!table.getSortOrder().isEmpty()) {
             ManagerController.showErrorDialog("Cannot update if the columns are custom sorted! " +
                     "Please reset the sorting of the columns.");
+            return false;
         }
         else {
-            if (ManagerController.showConfirmationDialog("Confirm UPDATE operation!",
-                    "Are you sure want to modify the selected row? Click OK to proceed!")) {
-                // Get the index of the selected row (thus the row to be edited)
-                TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
-                // Saving the row's information to a list
-                List<String> currentRowData = currentRow.getAllDataFromRow();
-                StringBuilder updateSQL = new StringBuilder("UPDATE " + selectedTable + " SET ");
-                for(int i = 0; i < COLUMNNAMES.size(); i++){
-                    updateSQL.append(COLUMNNAMES.get(i));
-                    updateSQL.append(" = '");
-                    updateSQL.append(currentRowData.get(i));
-                    updateSQL.append("', ");
-                }
-                // Delete the last 2 characters after the loop (,_)
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-                updateSQL.append(" WHERE ");
-                if (KEYS.size() != 0) {
-                    for (int i = 0; i < KEYS.size(); i++) {
-                        updateSQL.append(KEYS.get(i));
-                        updateSQL.append(" = '");
-                        // The column indexes are not stored in the same order as the columns themselves
-                        // We have a list of the names of the primary keys of the table
-                        // So we can find the key column's locations by their names
-                        updateSQL.append(currentRowDataBeforeModified.get(findColumnIndex(KEYS.get(i))));
-                        updateSQL.append("' AND ");
-                    }
-                } else {
-                    for (int i = 0; i < currentRowData.size(); i++) {
-                        updateSQL.append(columnOrder.get(i));
-                        updateSQL.append(" = '");
-                        updateSQL.append(currentRowData.get(i));
-                        updateSQL.append("' AND ");
-                    }
-                }
-                // Remove the last 4 characters (AND_)
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-                updateSQL.deleteCharAt(updateSQL.length() - 1);
-
-                System.out.println(updateSQL);
-
-                try (Connection connection =
-                             ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
-                    Statement statement = connection.createStatement();
-                    statement.execute(updateSQL.toString());
-                    ManagerController.showHelpDialog("UPDATE successful", "You have successfully " +
-                            "updated from the selected row.");
-                    reloadTable();
-                } catch (Exception ex) {
-                    ManagerController.showErrorDialog(ex.getMessage());
-                }
+            return true;
+        }
+    }
+    public void attemptUpdate(){
+        if(isUpdateOperationReady()){
+            runUpdate();
+        }
+    }
+    private void runUpdate() {
+        if (isActionConfirmedByUser("UPDATE")) {
+            List<String> currentRowData = getDataFromSelectedRow();
+            String updateSQL = generateUpdateSQLString(currentRowData);
+            try (Connection connection =
+                         ConnectionController.establishConnection(ManagerController.currentConnectionURL)) {
+                Statement statement = connection.createStatement();
+                statement.execute(updateSQL);
+                ManagerController.showHelpDialog("UPDATE successful", "You have successfully " +
+                        "updated from the selected row.");
+                reloadTable();
+            } catch (Exception ex) {
+                ManagerController.showErrorDialog(ex.getMessage());
             }
         }
+    }
+    private static boolean isActionConfirmedByUser(String operationType) {
+        return ManagerController.showConfirmationDialog("Confirm " + operationType + "!",
+                "Are you sure want to run this operation? Click OK to proceed!");
+    }
+    private String generateUpdateSQLString(List<String> currentRowData) {
+        StringBuilder updateSQL = new StringBuilder("UPDATE " + selectedTable + " SET ");
+        for(int i = 0; i < COLUMNNAMES.size(); i++){
+            updateSQL.append(COLUMNNAMES.get(i));
+            updateSQL.append(" = ");
+            if (!currentRowData.get(i).isEmpty()) {
+                updateSQL.append("'");
+                updateSQL.append(currentRowData.get(i));
+                updateSQL.append("', ");
+            } else {
+                updateSQL.append("NULL, ");
+            }
+        }
+        // Delete the last 2 characters after the loop (,_)
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        updateSQL.append(" WHERE ");
+        if (KEYS.size() != 0) {
+            for (String key : KEYS) {
+                updateSQL.append(key);
+                updateSQL.append(" = '");
+                // The column indexes are not stored in the same order as the columns themselves
+                // We have a list of the names of the primary keys of the table
+                // So we can find the key column's locations by their names
+                updateSQL.append(currentRowDataBeforeModified.get(findColumnIndex(key)));
+                updateSQL.append("' AND ");
+            }
+        } else {
+            for (int i = 0; i < currentRowData.size(); i++) {
+                updateSQL.append(columnOrder.get(i));
+                updateSQL.append(" = '");
+                updateSQL.append(currentRowData.get(i));
+                updateSQL.append("' AND ");
+            }
+        }
+        // Remove the last 4 characters (AND_)
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        updateSQL.deleteCharAt(updateSQL.length() - 1);
+        return updateSQL.toString();
+    }
+    private List<String> getDataFromSelectedRow() {
+        // Get the index of the selected row (thus the row to be edited)
+        TableRowData currentRow = table.getItems().get(table.getSelectionModel().getFocusedIndex());
+        // Saving the row's information to a list
+        return currentRow.getAllDataFromRow();
     }
     private int findColumnIndex(String columnName) {
         ObservableList<? extends TableColumn<?, ?>> columns = table.getColumns();
@@ -398,7 +433,6 @@ public class TableController implements Initializable {
         // Setting the table in case multiple instances of the editor will be opened
         // So that each instance knows what table it is editing
         selectedTable = ManagerController.selectedTable;
-        // Initialize table
         initTable();
         // Saving the currently loaded table's information
         try {
