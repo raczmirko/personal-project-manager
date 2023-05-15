@@ -237,9 +237,13 @@ public class TableController implements Initializable {
                 // Add closing bracket
                 insertSQL.append(") VALUES (");
                 for(String s : dataToInsert){
-                    insertSQL.append("'");
-                    insertSQL.append(s);
-                    insertSQL.append("',");
+                    if (s.isEmpty()) {
+                        insertSQL.append("NULL,");
+                    } else {
+                        insertSQL.append("'");
+                        insertSQL.append(s);
+                        insertSQL.append("',");
+                    }
                 }
                 // Remove the last colon
                 insertSQL.deleteCharAt(insertSQL.length() - 1);
@@ -253,6 +257,7 @@ public class TableController implements Initializable {
                         "inserted into the " + selectedTable + " table.");
                 // Re-initializate the table to add another input field, etc.
                 reloadTable();
+
             }catch (Exception ex){
                 ManagerController.showErrorDialog(ex.getMessage());
             }
