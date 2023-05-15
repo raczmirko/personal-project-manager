@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-
 import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
@@ -26,14 +25,11 @@ public class ViewController implements Initializable {
                 // Running query to get the column information from INFORMATION_SCHEMA
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(sqlSelect);
-
                 // Get the ResultSet metadata to retrieve column information
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 int columnCount = metaData.getColumnCount();
-
                 // Create a list to hold the rows of data
                 List<TableRowData> rows = new ArrayList<>();
-
                 // Populate the list with data from the ResultSet
                 while (resultSet.next()) {
                     TableRowData row = new TableRowData();
@@ -65,13 +61,11 @@ public class ViewController implements Initializable {
             ManagerController.showErrorDialog(e.getMessage());
         }
     }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Setting the table in case multiple instances of the editor will be opened
         // So that each instance knows what table it is editing
         selectedView = ManagerController.selectedView;
-        // Initialize table
         initTable();
     }
 }
