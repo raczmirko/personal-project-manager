@@ -55,3 +55,17 @@ jlink {
 jlinkZip {
     group = 'distribution'
 }
+
+jar {
+    duplicatesStrategy "exclude"
+    manifest {
+        attributes 'Main-Class': 'hu.okrim.personalprojectmanager.ManagerApplication'
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude('META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.MF')
+    archiveFileName = 'PersonalProjectManager.jar'
+    destinationDirectory = file('build/libs')
+}
