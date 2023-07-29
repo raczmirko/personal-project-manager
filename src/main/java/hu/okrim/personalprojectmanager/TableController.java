@@ -305,6 +305,8 @@ public class TableController implements Initializable {
             }
         }
     }
+    //DELETE operation doesn't need to be prepared for NULL values
+    //as records are identified by the keys and keys cannot be NULL
     private String generateDeleteSQLString(List<String> currentRowData) {
         StringBuilder deleteSQL = new StringBuilder("DELETE FROM " + selectedTable + " WHERE ");
         if (KEYS.size() != 0) {
